@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} · {{ get_sitename() }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="{{ get_base_url() }}assets/css/admin/sb-admin-2.min.css" rel="stylesheet">
+  {{ get_css_framework()|raw }}
+  <link href="{{ get_base_url() }}assets/css/main.css?v={{ get_asset_version() }}" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bi-body">
+  <div id="wrapper">
+    <nav class="navbar-nav bi-sidebar sidebar sidebar-dark accordion" id="accordionSidebar">
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ get_base_url() }}admin"><span class="bi-brand-mark"><i class="fa-solid fa-boxes-stacked"></i></span><span>Bienes<br>Informáticos</span></a>
+      <hr class="sidebar-divider my-0">
+      <div class="sidebar-heading">Principal</div>
+      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}admin"><i class="fa-solid fa-chart-pie"></i><span>Inicio</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}identificar"><i class="fa-solid fa-barcode"></i><span>Identificar bien</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}bienes"><i class="fa-solid fa-laptop"></i><span>Inventario</span></a></li>
+      <hr class="sidebar-divider"><div class="sidebar-heading">Documentos</div>
+      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos"><i class="fa-solid fa-clipboard-user"></i><span>Resguardos</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos/tarjeta"><i class="fa-solid fa-id-card"></i><span>Tarjeta de resguardo</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos/resguardo_equipo"><i class="fa-solid fa-file-signature"></i><span>Resguardo del equipo</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos/baja_resguardante"><i class="fa-solid fa-file-circle-minus"></i><span>Baja de resguardante</span></a></li>
+      <hr class="sidebar-divider"><div class="sidebar-heading">Catálogos</div>
+      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}catalogos/clasificacion"><i class="fa-solid fa-sitemap"></i><span>Clasificación</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}catalogos/marcas_modelos"><i class="fa-solid fa-tags"></i><span>Marcas y modelos</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}catalogos/estados_uso"><i class="fa-solid fa-heart-pulse"></i><span>Estados de uso</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}catalogos/ubicaciones"><i class="fa-solid fa-location-dot"></i><span>Ubicaciones</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}catalogos/unidades_admin"><i class="fa-solid fa-building"></i><span>Unidades administrativas</span></a></li>
+      {% if current_user.rol|default('inventario') == 'admin' %}<li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}admin/usuarios"><i class="fa-solid fa-users"></i><span>Usuarios</span></a></li>{% endif %}
+    </nav>
+    <div id="content-wrapper" class="d-flex flex-column"><div id="content">
+      <nav class="navbar navbar-expand bi-topbar mb-4 static-top shadow"><div class="ms-auto text-white small"><i class="fa-solid fa-user me-2"></i>{{ current_user.username|default('Usuario') }} · <a class="text-white" href="{{ get_base_url() }}logout">Cerrar sesión</a></div></nav>
+      <main class="container-fluid px-4 pb-5">{{ flash_html|raw }}

@@ -21,6 +21,10 @@ class beeController extends Controller implements ControllerInterface
 
   function index()
   {
+    // La bienvenida de Bee es una herramienta de desarrollo. No debe ser la
+    // primera pantalla de la aplicación patrimonial.
+    Redirect::to(Auth::validate() ? 'admin' : 'login');
+
     /**
      * No es necesaria esta variable
      * pero así puedes registrar elementos al objeto

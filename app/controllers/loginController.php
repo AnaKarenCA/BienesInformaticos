@@ -6,7 +6,7 @@ class loginController extends Controller implements ControllerInterface
   {
     if (Auth::validate()) {
       Flasher::new('Ya hay una sesión abierta.');
-      Redirect::to('admin/perfil');
+      Redirect::to('admin');
     }
 
     // Ejecutar la funcionalidad del Controller padre
@@ -16,8 +16,15 @@ class loginController extends Controller implements ControllerInterface
   function index()
   {
     $this->setTitle('Ingresa a tu cuenta');
+    $this->setEngine('twig');
+    $this->addToData('csrf', (new Csrf())->get_token());
     $this->setView('login');
     $this->render();
+  }
+
+  function registro()
+  {
+    $this->index();
   }
 
   function post_login()
@@ -63,6 +70,10 @@ class loginController extends Controller implements ControllerInterface
           throw new Exception('Las credenciales no son correctas.');
         }
 
+        if (isset($user['activo']) && (int) $user['activo'] !== 1) {
+          throw new Exception('Tu cuenta se encuentra inactiva.');
+        }
+
         // Verifica el password del usuario con base al ingresado y el de la db
         if (!password_verify($password.AUTH_SALT, $user['password'])) {
           throw new Exception('Las credenciales no son correctas.');
@@ -81,6 +92,32 @@ class loginController extends Controller implements ControllerInterface
       // Redirección a la página inicial después de log in
       Redirect::to('admin');
 
+    } catch (Exception $e) {
+      Flasher::error($e->getMessage());
+      Redirect::back();
+    }
+  }
+
+  function post_registro()
+  {
+    try {
+      if (!Csrf::validate($_POST['csrf'] ?? '') || !check_posted_data(['nombre', 'usuario', 'email', 'password'], $_POST)) {
+        throw new Exception('Completa los datos requeridos.');
+      }
+      $username = sanitize_input($_POST['usuario']);
+      $email = sanitize_input($_POST['email']);
+      $nombre = sanitize_input($_POST['nombre']);
+      $password = $_POST['password'];
+      if (!preg_match('/^[a-zA-Z0-9._-]{5,50}$/', $username)) throw new Exception('El usuario debe tener entre 5 y 50 caracteres válidos.');
+      if (!filter_var($email, FILTER_VALIDATE_EMAIL)) throw new Exception('Ingresa un correo electrónico válido.');
+      if (strlen($password) < 8) throw new Exception('La contraseña debe tener al menos 8 caracteres.');
+      if (Model::query('SELECT id FROM bee_users WHERE username = :usuario OR email = :email', ['usuario' => $username, 'email' => $email])) throw new Exception('El usuario o correo ya está registrado.');
+      Model::add('bee_users', [
+        'username' => $username, 'email' => $email, 'password' => password_hash($password . AUTH_SALT, PASSWORD_BCRYPT),
+        'nombre' => $nombre, 'telefono' => sanitize_input($_POST['telefono'] ?? ''), 'rol' => 'inventario', 'activo' => 1, 'created_at' => now()
+      ]);
+      Flasher::success('Registro realizado. Ya puedes iniciar sesión.');
+      Redirect::to('login');
     } catch (Exception $e) {
       Flasher::error($e->getMessage());
       Redirect::back();

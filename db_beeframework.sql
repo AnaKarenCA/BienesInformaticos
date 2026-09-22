@@ -634,3 +634,9 @@ CREATE TABLE baja_resguardo (
         ON UPDATE CASCADE
         ON DELETE RESTRICT
 ) ENGINE=InnoDB;
+
+ALTER TABLE movimiento_bien
+  ADD COLUMN id_resguardo_anterior INT NULL AFTER resguardante_nuevo,
+  ADD COLUMN id_resguardo_nuevo INT NULL AFTER id_resguardo_anterior,
+  ADD CONSTRAINT FK_movimiento_resguardo_anterior FOREIGN KEY (id_resguardo_anterior) REFERENCES resguardo(id_resguardo) ON UPDATE CASCADE ON DELETE SET NULL,
+  ADD CONSTRAINT FK_movimiento_resguardo_nuevo FOREIGN KEY (id_resguardo_nuevo) REFERENCES resguardo(id_resguardo) ON UPDATE CASCADE ON DELETE SET NULL;

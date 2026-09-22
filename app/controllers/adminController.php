@@ -24,27 +24,14 @@ class adminController extends Controller implements ControllerInterface
   
   function index()
   {
-    register_scripts([JS . 'admin/demo.js'], 'Chartjs gráficas para administración');
-
-    $this->setTitle('Administración');
-    $buttons =
-    [
-      [
-        'url'   => 'admin',
-        'class' => 'btn-danger text-white',
-        'id'    => '',
-        'icon'  => 'fas fa-download',
-        'text'  => 'Descargar'
-      ],
-      [
-        'url'   => 'admin',
-        'class' => 'btn-success text-white',
-        'id'    => '',
-        'icon'  => 'fas fa-file-pdf',
-        'text'  => 'Exportar'
-      ]
-    ];
-    $this->addToData('buttons', $buttons);
+    $this->setEngine('twig');
+    $this->setTitle('Inicio');
+    $this->addToData('resumen', BienModel::resumen());
+    $this->addToData('recientes', BienModel::recientes());
+    $this->addToData('csrf', (new Csrf())->get_token());
+    $this->addToData('current_user', get_user());
+    $this->addToData('flash_html', Flasher::flash());
+    $this->setView('dashboard/index');
     $this->render();
   }
 
@@ -78,6 +65,11 @@ class adminController extends Controller implements ControllerInterface
   ////////////////////////////////////////////////////
   function usuarios()
   {
+    $user = get_user();
+    if (($user['rol'] ?? 'inventario') !== 'admin') {
+      Flasher::error('No tienes autorización para administrar usuarios.');
+      Redirect::to('admin');
+    }
     $this->setTitle('Usuarios');
     $this->addToData('users', userModel::all_paginated());
     $this->addToData('slug' , 'usuarios');
@@ -88,6 +80,8 @@ class adminController extends Controller implements ControllerInterface
   function post_usuarios()
   {
     try {
+      $user = get_user();
+      if (($user['rol'] ?? 'inventario') !== 'admin') throw new Exception('No tienes autorización para administrar usuarios.');
       if (!check_posted_data(['username','email','password'], $_POST)) {
         throw new Exception('Por favor completa el formulario.');
       }
@@ -161,6 +155,8 @@ class adminController extends Controller implements ControllerInterface
   function borrar_usuario($id = null)
   {
     try {
+      $user = get_user();
+      if (($user['rol'] ?? 'inventario') !== 'admin') throw new Exception('No tienes autorización para administrar usuarios.');
       if (!Csrf::validate($_GET['_t'])) {
         throw new Exception(get_bee_message(0));
       }
@@ -192,6 +188,8 @@ class adminController extends Controller implements ControllerInterface
   function destruir_sesion($id = null)
   {
     try {
+      $user = get_user();
+      if (($user['rol'] ?? 'inventario') !== 'admin') throw new Exception('No tienes autorización para administrar usuarios.');
       if (!Csrf::validate($_GET['_t'])) {
         throw new Exception(get_bee_message(0));
       }

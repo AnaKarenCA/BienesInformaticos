@@ -71,3 +71,160 @@
   line-height: 1.4
   border: 1px solid #444  // Borde un poco más claro que el fondo
   overflow-x: auto
+
+// Sistema institucional de Bienes Informáticos
+.bi-body
+  background: $gris-claro
+  color: $texto-principal
+
+.bi-sidebar, .bi-topbar
+  background: $institucional-oscuro !important
+
+.bi-sidebar .nav-item .nav-link
+  color: rgba($blanco, .86)
+  border-left: 3px solid transparent
+  &:hover, &:focus
+    color: $blanco
+    background: rgba($blanco, .08)
+  &.active
+    color: $blanco
+    border-left-color: $institucional-acento
+    background: rgba($blanco, .08)
+
+.bi-sidebar .sidebar-heading
+  color: rgba($blanco, .58)
+
+.bi-brand-mark
+  color: $institucional-acento
+  font-size: 1.5rem
+
+.bi-title
+  color: $texto-titulos
+  font-weight: 800
+
+.bi-btn-primary
+  background: $institucional-primario
+  border-color: $institucional-primario
+  color: $blanco
+  &:hover, &:focus
+    background: darken($institucional-primario, 10%)
+    border-color: darken($institucional-primario, 10%)
+    color: $blanco
+
+.bi-badge
+  color: $texto-titulos
+  background: $institucional-acento
+
+.bi-stat-card
+  border-left-color: $institucional-primario !important
+
+.form-control:focus, .form-select:focus
+  border-color: $institucional-primario
+  box-shadow: 0 0 0 .2rem rgba($institucional-primario, .2)
+
+.bi-detail-grid
+  display: grid
+  grid-template-columns: repeat(2, minmax(0, 1fr))
+  gap: 1.25rem
+  small, strong
+    display: block
+  small
+    color: #777
+    text-transform: uppercase
+    font-size: .7rem
+  strong
+    color: $texto-titulos
+
+.bi-timeline
+  list-style: none
+  margin: 0
+  padding-left: 1.3rem
+  border-left: 2px solid $institucional-acento
+  li
+    position: relative
+    padding: 0 0 1rem 1rem
+    &:before
+      content: ''
+      position: absolute
+      width: .65rem
+      height: .65rem
+      border-radius: 50%
+      background: $institucional-primario
+      left: -.42rem
+      top: .35rem
+    span
+      display: block
+      color: #777
+      font-size: .8rem
+    p
+      margin: .25rem 0 0
+
+.bi-hero
+  color: $blanco
+  text-align: center
+  padding: 3rem 1rem
+  border-radius: .75rem
+  background: linear-gradient(135deg, $institucional-oscuro, $institucional-primario)
+
+.bi-login-page
+  min-height: 100vh
+  display: grid
+  place-items: center
+  padding: 1.25rem
+  background: linear-gradient(135deg, $institucional-oscuro, $institucional-primario)
+  font-family: 'Nunito', sans-serif
+
+.bi-login-card
+  width: min(100%, 460px)
+  overflow: hidden
+  border-radius: .75rem
+  background: $blanco
+  box-shadow: 0 1rem 3rem rgba(0,0,0,.25)
+  header
+    padding: 2rem
+    text-align: center
+    color: $blanco
+    background: $institucional-oscuro
+    h1
+      margin: .4rem 0 0
+      font-size: 1.4rem
+    p
+      margin: .25rem 0 0
+      opacity: .8
+  label, input
+    display: block
+    width: 100%
+  label
+    margin-top: 1rem
+    font-weight: 700
+  input
+    padding: .65rem .75rem
+    border: 1px solid #ddd
+    border-radius: .35rem
+  form button
+    margin-top: 1.25rem
+    padding: .65rem
+
+.bi-login-body
+  padding: 1.75rem
+
+.bi-login-tabs
+  display: flex
+  border-bottom: 1px solid #ddd
+  button
+    flex: 1
+    padding: .6rem
+    border: 0
+    background: transparent
+    &.active
+      color: $institucional-primario
+      border-bottom: 2px solid $institucional-primario
+
+.bi-auth-panel
+  display: none
+  &.active
+    display: block
+
+@media (max-width: 768px)
+  .bi-detail-grid
+    grid-template-columns: 1fr
