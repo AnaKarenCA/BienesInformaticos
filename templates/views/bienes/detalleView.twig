@@ -1,5 +1,55 @@
 {% include 'includes/admin/inventory-top.twig' %}
-<div class="d-sm-flex align-items-center justify-content-between mb-4"><div><h1 class="h3 mb-1 bi-title">{{ bien.nombre_bien }}</h1><p class="text-muted mb-0">{{ bien.numero_inventario }} · {{ bien.numero_serie|default('Sin serie') }}</p></div><div><a class="btn btn-outline-secondary" href="{{ get_base_url() }}bienes">Inventario</a><a class="btn bi-btn-primary" href="{{ get_base_url() }}bienes/editar/{{ bien.id_bien }}">Editar</a></div></div>
-<div class="row"><div class="col-lg-8"><div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white"><strong>Identificación y clasificación</strong></div><div class="card-body bi-detail-grid"><div><small>CI</small><strong>{{ bien.numero_inventario }}</strong></div><div><small>NIC / CEA</small><strong>{{ bien.nic_cea|default('—') }}</strong></div><div><small>Activo genérico</small><strong>{{ bien.activo_generico_nombre|default('—') }}</strong></div><div><small>Grupo / específico</small><strong>{{ bien.grupo_nombre|default('—') }} · {{ bien.activo_especifico_nombre|default('—') }}</strong></div><div><small>Marca / modelo</small><strong>{{ bien.marca_nombre|default('—') }} {{ bien.modelo_nombre ? '· ' ~ bien.modelo_nombre : '' }}</strong></div><div><small>Estado de uso</small><strong>{{ bien.estado_nombre|default('—') }}</strong></div></div></div><div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white"><strong>Información física y administrativa</strong></div><div class="card-body bi-detail-grid"><div><small>Serie</small><strong>{{ bien.numero_serie|default('—') }}</strong></div><div><small>Material / color</small><strong>{{ bien.material|default('—') }} / {{ bien.color|default('—') }}</strong></div><div><small>Unidad administrativa</small><strong>{{ bien.codigo_ua }} · {{ bien.unidad_nombre }}</strong></div><div><small>Ubicación</small><strong>{{ bien.ubicacion_fisica|default('—') }}</strong></div><div><small>Valor</small><strong>{{ bien.valor ? '$' ~ bien.valor : '—' }}</strong></div><div><small>Resguardante</small><strong>{{ bien.resguardante_nombre|default('Pendiente') }}</strong></div></div><div class="card-body pt-0"><small>Características</small><p class="mb-0">{{ bien.caracteristicas|default('Sin especificar') }}</p></div></div></div><div class="col-lg-4"><div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white"><strong>Acciones</strong></div><div class="card-body d-grid gap-2"><a class="btn btn-outline-secondary" href="{{ get_base_url() }}resguardos/tarjeta/{{ bien.id_bien }}">Tarjeta de resguardo</a><a class="btn btn-outline-secondary" href="{{ get_base_url() }}resguardos/resguardo_equipo/{{ bien.id_bien }}">Resguardo del equipo</a><a class="btn btn-outline-secondary" href="{{ get_base_url() }}resguardos/baja_resguardante/{{ bien.id_bien }}">Baja de resguardante</a></div></div><div class="card shadow-sm border-0"><div class="card-header bg-white"><strong>Componentes</strong></div><ul class="list-group list-group-flush">{% for componente in bien.componentes %}<li class="list-group-item"><strong>{{ componente.tipo_componente }}</strong><br><small>{{ componente.marca|default('') }} {{ componente.modelo|default('') }} · {{ componente.numero_serie|default('Sin serie') }}</small></li>{% else %}<li class="list-group-item text-muted">Sin componentes registrados.</li>{% endfor %}</ul></div></div></div>
-<div class="card shadow-sm border-0"><div class="card-header bg-white"><strong>Trazabilidad</strong></div><div class="card-body"><ul class="bi-timeline">{% for movimiento in bien.movimientos %}<li><strong>{{ movimiento.tipo_movimiento }}</strong><span>{{ movimiento.fecha_movimiento|date('d/m/Y H:i') }}</span><p>{{ movimiento.motivo|default(movimiento.observaciones|default('')) }}</p></li>{% else %}<li>Sin movimientos registrados.</li>{% endfor %}</ul></div></div>
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+  <div><h1 class="h3 mb-1 bi-title">{{ bien.nombre_bien }}</h1><p class="text-muted mb-0">{{ bien.clave_interna|default('Sin CI') }} · {{ bien.numero_serie|default('Sin serie') }}</p></div>
+  <div class="d-flex gap-2"><a class="btn btn-outline-secondary" href="{{ get_base_url() }}bienes">Inventario</a><a class="btn bi-btn-primary" href="{{ get_base_url() }}bienes/editar/{{ bien.id_bien }}">Editar</a></div>
+</div>
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white"><strong>Identificación y clasificación</strong></div><div class="card-body bi-detail-grid">
+      <div><small>Clave interna CI</small><strong>{{ bien.clave_interna|default('—') }}</strong></div>
+      <div><small>Número de inventario</small><strong>{{ bien.numero_inventario|default('—') }}</strong></div>
+      <div><small>NIC / CEA</small><strong>{{ bien.nic_cea|default('—') }}</strong></div>
+      <div><small>Código de unidad administrativa</small><strong>{{ bien.codigo_ua|default('—') }}</strong></div>
+      <div><small>Activo genérico</small><strong>{{ bien.activo_generico_nombre|default('—') }}</strong></div>
+      <div><small>Grupo del activo</small><strong>{{ bien.grupo_nombre|default('—') }}</strong></div>
+      <div><small>Activo específico</small><strong>{{ bien.activo_especifico_nombre|default('—') }}</strong></div>
+      <div><small>Nombre del bien</small><strong>{{ bien.nombre_bien|default('—') }}</strong></div>
+    </div></div>
+
+    <div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white"><strong>Características</strong></div><div class="card-body bi-detail-grid">
+      <div><small>Material</small><strong>{{ bien.material|default('—') }}</strong></div>
+      <div><small>Marca</small><strong>{{ bien.marca_nombre|default('—') }}</strong></div>
+      <div><small>Modelo</small><strong>{{ bien.modelo_nombre|default('—') }}</strong></div>
+      <div><small>Color</small><strong>{{ bien.color|default('—') }}</strong></div>
+      <div><small>Estado de uso</small><strong>{{ bien.estado_nombre|default('—') }}</strong></div>
+      <div><small>Serie</small><strong>{{ bien.numero_serie|default('—') }}</strong></div>
+      <div><small>Fecha de alta</small><strong>{{ bien.fecha_alta ? bien.fecha_alta|date('d/m/Y') : '—' }}</strong></div>
+      <div><small>Fecha de adquisición</small><strong>{{ bien.fecha_adquisicion ? bien.fecha_adquisicion|date('d/m/Y') : '—' }}</strong></div>
+      <div><small>Fecha de elaboración</small><strong>{{ bien.fecha_elaboracion ? bien.fecha_elaboracion|date('d/m/Y') : '—' }}</strong></div>
+      <div><small>Fecha de asignación</small><strong>{{ bien.fecha_asignacion_actual ? bien.fecha_asignacion_actual|date('d/m/Y') : (bien.fecha_asignacion ? bien.fecha_asignacion|date('d/m/Y') : '—') }}</strong></div>
+      <div><small>Valor</small><strong>{% if bien.valor is not null and bien.valor != '' %}${{ bien.valor|number_format(2, '.', ',') }} MXN{% else %}—{% endif %}</strong></div>
+      <div><small>Resguardante</small><strong>{{ bien.resguardante_nombre|default('Pendiente') }}</strong></div>
+    </div><div class="card-body border-top"><small>Características</small><p class="mb-3">{{ bien.caracteristicas|default('S/C', true) }}</p><small>Observaciones</small><p class="mb-0">{{ bien.observaciones|default('—', true) }}</p></div></div>
+
+    <div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white"><strong>Administración y ubicación</strong></div><div class="card-body bi-detail-grid">
+      {% for etiqueta, valor in {'Secretaría': bien.jerarquia_administrativa.secretaria, 'Subsecretaría': bien.jerarquia_administrativa.subsecretaria, 'Dirección de secretaría': bien.jerarquia_administrativa.direccion_secretaria, 'Dirección de área': bien.jerarquia_administrativa.direccion_area, 'Subdirección': bien.jerarquia_administrativa.subdireccion, 'Departamento': bien.jerarquia_administrativa.departamento, 'Oficina': bien.jerarquia_administrativa.oficina} %}
+        {% if valor %}<div><small>{{ etiqueta }}</small><strong>{{ valor }}</strong></div>{% endif %}
+      {% endfor %}
+      <div><small>Unidad administrativa seleccionada</small><strong>{{ bien.codigo_ua }} - {{ bien.unidad_nombre }}</strong></div>
+      <div><small>Municipio</small><strong>{{ bien.municipio|default('—') }}</strong></div>
+      <div><small>Localidad</small><strong>{{ bien.localidad|default('—') }}</strong></div>
+    </div><div class="card-body border-top"><h2 class="h6 mb-3">Ubicación física del bien</h2><div class="bi-detail-grid"><div><small>PISO</small><strong>{{ bien.piso|default('—') }}</strong></div><div><small>SECCIÓN/ALA</small><strong>{{ bien.seccion_ala|default('—') }}</strong></div><div><small>CUBÍCULO</small><strong>{{ bien.cubiculo|default('—') }}</strong></div></div></div></div>
+  </div>
+  <aside class="col-lg-4"><div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white"><strong>Acciones</strong></div><div class="card-body d-grid gap-2">
+    <a class="btn btn-outline-secondary" href="{{ get_base_url() }}bienes/codigo_barra/{{ bien.id_bien }}"><i class="fa-solid fa-barcode me-1"></i>Mostrar código de barras</a>
+    <a class="btn btn-outline-secondary" href="{{ get_base_url() }}bienes/codigo_barra/{{ bien.id_bien }}" target="_blank"><i class="fa-solid fa-print me-1"></i>Imprimir código de barras</a>
+    <a class="btn btn-outline-secondary" href="{{ get_base_url() }}resguardos/tarjeta/{{ bien.id_bien }}">Tarjeta de resguardo</a>
+    <a class="btn btn-outline-secondary" href="{{ get_base_url() }}resguardos/resguardo_equipo/{{ bien.id_bien }}">Resguardo del equipo</a>
+    <a class="btn btn-outline-secondary" href="{{ get_base_url() }}resguardos/baja_resguardante/{{ bien.id_bien }}">Baja de resguardante</a>
+  </div></div></aside>
+</div>
+
+<div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white"><strong>Componentes</strong></div><div class="table-responsive"><table class="table table-striped mb-0 bi-components-table"><thead class="table-light"><tr><th>Componente</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Inventario / Clave interna CI</th></tr></thead><tbody>{% for componente in bien.componentes %}<tr><td>{{ componente.tipo_componente }}</td><td>{{ componente.marca|default('—') }}</td><td>{{ componente.modelo|default('—') }}</td><td>{{ componente.numero_serie|default('—') }}</td><td>{{ componente.numero_inventario|default('—') }}</td></tr>{% else %}<tr><td colspan="5" class="text-center text-muted">Sin componentes registrados.</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="card shadow-sm border-0" id="trazabilidad"><div class="card-header bg-white"><strong>Trazabilidad</strong></div><div class="card-body"><ul class="bi-timeline">{% for movimiento in bien.movimientos %}<li><strong>{{ movimiento.tipo_movimiento }}</strong><span>{{ movimiento.fecha_movimiento|date('d/m/Y H:i') }}</span><p>{{ movimiento.motivo|default(movimiento.observaciones|default('')) }}</p></li>{% else %}<li>Sin movimientos registrados.</li>{% endfor %}</ul></div></div>
 {% include 'includes/admin/inventory-bottom.twig' %}

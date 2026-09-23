@@ -237,7 +237,6 @@ CREATE TABLE unidad_administrativa (
     id_unidad INT AUTO_INCREMENT PRIMARY KEY,
     codigo_ua VARCHAR(20) NOT NULL UNIQUE,
     nombre VARCHAR(250) NOT NULL,
-    tipo CHAR(1) NULL COMMENT 'L = Localidad jerárquica, S = Subunidad',
     id_padre INT NULL,
 
     CONSTRAINT FK_ua_padre
@@ -364,7 +363,8 @@ CREATE TABLE ubicacion (
 CREATE TABLE bien (
     id_bien INT AUTO_INCREMENT PRIMARY KEY,
 
-    numero_inventario VARCHAR(20) NOT NULL UNIQUE,
+    numero_inventario VARCHAR(20) NULL UNIQUE,
+    clave_interna VARCHAR(18) NULL UNIQUE,
     nic_cea VARCHAR(20) NULL,
 
     id_unidad INT NOT NULL,
@@ -393,6 +393,9 @@ CREATE TABLE bien (
     valor DECIMAL(18,2) NULL,
 
     id_ubicacion INT NULL,
+    piso VARCHAR(50) NULL,
+    seccion_ala VARCHAR(100) NULL,
+    cubiculo VARCHAR(100) NULL,
 
     fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

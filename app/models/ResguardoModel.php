@@ -4,7 +4,7 @@ class ResguardoModel extends Model
 {
   public static function vigentes(): array
   {
-    $sql = "SELECT r.*, b.numero_inventario, b.nombre_bien, b.numero_serie, ua.codigo_ua, ua.nombre unidad_nombre,
+    $sql = "SELECT r.*, b.numero_inventario, b.clave_interna, b.nombre_bien, b.numero_serie, ua.codigo_ua, ua.nombre unidad_nombre,
       CONCAT(p.nombre, ' ', p.apellido_paterno, ' ', COALESCE(p.apellido_materno, '')) resguardante_nombre
       FROM resguardo r INNER JOIN bien b ON b.id_bien=r.id_bien INNER JOIN resguardante p ON p.id_resguardante=r.id_resguardante
       INNER JOIN unidad_administrativa ua ON ua.id_unidad=b.id_unidad WHERE r.activo=1 ORDER BY resguardante_nombre, b.nombre_bien";

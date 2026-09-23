@@ -5,7 +5,6 @@ class loginController extends Controller implements ControllerInterface
   function __construct()
   {
     if (Auth::validate()) {
-      Flasher::new('Ya hay una sesión abierta.');
       Redirect::to('admin');
     }
 

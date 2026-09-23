@@ -225,6 +225,24 @@
   &.active
     display: block
 
+.bi-components-table
+  min-width: 920px
+  table-layout: fixed
+  th
+    white-space: normal
+    &:nth-child(1)
+      width: 16%
+    &:nth-child(2), &:nth-child(3), &:nth-child(4)
+      width: 18%
+    &:nth-child(5)
+      width: 25%
+    &:last-child
+      width: 5%
+  td
+    vertical-align: middle
+  .form-control
+    min-width: 0
+
 @media (max-width: 768px)
   .bi-detail-grid
     grid-template-columns: 1fr
