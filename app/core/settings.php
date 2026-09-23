@@ -157,7 +157,9 @@ define('LDB_PASS'                , '');
 define('LDB_CHARSET'             , 'utf8');
 
 // El controlador por defecto / el método por defecto / el controlador de errores por defecto
-define('DEFAULT_CONTROLLER'      , 'bee');
+// El punto de entrada de la aplicación es el acceso al inventario, no la
+// pantalla de bienvenida técnica del framework.
+define('DEFAULT_CONTROLLER'      , 'login');
 define('DEFAULT_ERROR_CONTROLLER', 'error');
 define('DEFAULT_METHOD'          , 'index');
 

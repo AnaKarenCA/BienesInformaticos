@@ -1,0 +1,29 @@
+{% include 'includes/admin/inventory-top.twig' %}
+<div class="d-flex justify-content-between align-items-center mb-4 no-print">
+  <div><h1 class="h3 mb-1 bi-title">Código de barras</h1><p class="text-muted mb-0">{{ bien.nombre_bien }}</p></div>
+  <div class="d-flex gap-2"><a class="btn btn-outline-secondary" href="{{ get_base_url() }}bienes/detalle/{{ bien.id_bien }}">Volver al detalle</a><button class="btn bi-btn-primary" type="button" onclick="window.print()"><i class="fa-solid fa-print me-1"></i>Imprimir</button></div>
+</div>
+<section class="card shadow-sm border-0 barcode-label mx-auto"><div class="card-body text-center p-4">
+  <p class="mb-1 fw-semibold">{{ bien.nombre_bien }}</p>
+  <svg id="barcodeSvg" role="img" aria-label="Código de barras {{ codigo_barra.codigo }}" viewBox="0 0 640 130" class="barcode-svg"></svg>
+  <strong class="d-block mt-2 barcode-value">{{ codigo_barra.codigo }}</strong>
+  <small class="text-muted">{{ codigo_barra.tipo_codigo }} · Inventario SICOPA: {{ bien.numero_inventario|default('—') }}</small>
+</div></section>
+<style>
+  .barcode-label { max-width: 680px; } .barcode-svg { width: 100%; height: 130px; } .barcode-value { letter-spacing: .12em; }
+  @media print { .no-print, .bi-sidebar, .topbar, nav, footer { display: none !important; } .card { border: 0 !important; box-shadow: none !important; } body { background: #fff !important; } }
+</style>
+<script>
+(() => {
+  const value = {{ codigo_barra.codigo|json_encode|raw }};
+  const patterns = ['212222','222122','222221','121223','121322','131222','122213','122312','132212','221213','221312','231212','112232','122132','122231','113222','123122','123221','223211','221132','221231','213212','223112','312131','311222','321122','321221','312212','322112','322211','212123','212321','232121','111323','131123','131321','112313','132113','132311','211313','231113','231311','112133','112331','132131','113123','113321','133121','313121','211331','231131','213113','213311','213131','311123','311321','331121','312113','312311','332111','314111','221411','431111','111224','111422','121124','121421','141122','141221','112214','112412','122114','122411','142112','142211','241211','221114','413111','241112','134111','111242','121142','121241','114212','124112','124211','411212','421112','421211','212141','214121','412121','111143','111341','131141','114113','114311','411113','411311','113141','114131','311141','411131','211412','211214','211232','2331112'];
+  const codes = [...value].map(char => char.charCodeAt(0) - 32);
+  if (codes.some(code => code < 0 || code > 94)) return;
+  const checksum = (104 + codes.reduce((sum, code, index) => sum + code * (index + 1), 0)) % 103;
+  let sequence = [104, ...codes, checksum, 106].map(code => patterns[code]).join('');
+  let x = 20, bars = '', black = true;
+  for (const width of sequence) { const w = Number(width) * 2; if (black) bars += `<rect x="${x}" y="5" width="${w}" height="110"/>`; x += w; black = !black; }
+  document.querySelector('#barcodeSvg').innerHTML = `<g fill="#000" transform="scale(${600 / (x - 20)},1)">${bars}</g>`;
+})();
+</script>
+{% include 'includes/admin/inventory-bottom.twig' %}
