@@ -1,0 +1,24 @@
+{% include 'includes/admin/inventory-top.twig' %}
+<div class="d-sm-flex justify-content-between align-items-start mb-4">
+  <div><h1 class="h3 mb-1 bi-title">Cambiar Resguardante Y Desactivar</h1><p class="text-muted">Asigna cada bien a un resguardante activo. El historial de asignaciones se conservará.</p></div>
+  <a class="btn btn-outline-secondary" href="{{ get_base_url() }}catalogos/resguardantes" title="Cancelar" aria-label="Cancelar"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span class="visually-hidden">Cancelar</span></a>
+</div>
+<div class="alert alert-warning"><strong>El resguardante tiene bienes resguardados.</strong> Elige un nuevo responsable para cada bien.</div>
+{% if not resguardantes_disponibles %}<div class="alert alert-danger" role="alert">No hay otros resguardantes activos disponibles para recibir estos bienes.</div>{% endif %}
+<div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white"><strong>Resguardante Actual</strong></div><div class="card-body row g-3">
+  <div class="col-md-3"><small class="text-muted d-block">CSP</small><strong>{{ resguardante.csp }}</strong></div>
+  <div class="col-md-5"><small class="text-muted d-block">Nombre Completo</small><strong>{{ resguardante.nombre_completo|title }}</strong></div>
+  <div class="col-md-4"><small class="text-muted d-block">Estado Actual</small><span class="badge text-bg-success">Activo</span></div>
+</div></div>
+<form method="post" action="{{ get_base_url() }}catalogos/cambiar_resguardante/{{ resguardante.id_resguardante }}" data-confirm-transfer>
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white"><strong>Bienes Resguardados ({{ bienes|length }})</strong></div><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>CI-</th><th>Inventario SICOPA</th><th>Nombre Del Bien</th><th>Marca / Modelo</th><th>Serie</th><th>Resguardante Actual</th><th>Nuevo Resguardante</th></tr></thead><tbody>
+  {% for bien in bienes %}<tr>
+    <td><strong>{{ bien.clave_interna|default('—') }}</strong></td><td>{{ bien.numero_inventario|default('—') }}</td><td>{{ bien.nombre_bien|title }}<small class="text-muted d-block">{{ bien.generico_nombre|default('')|title }}{% if bien.grupo_nombre %} · {{ bien.grupo_nombre|title }}{% endif %}{% if bien.especifico_nombre %} · {{ bien.especifico_nombre|title }}{% endif %}</small></td>
+    <td>{% if bien.marca_nombre %}<strong class="d-block">{{ bien.marca_nombre|upper }}</strong><small>{{ bien.modelo_nombre|default('') }}</small>{% else %}—{% endif %}</td><td>{{ bien.numero_serie|default('—') }}</td><td><strong class="d-block">{{ resguardante.csp }}</strong><small>{{ resguardante.nombre_completo|title }}</small></td>
+    <td><label class="visually-hidden" for="nuevoResguardante{{ bien.id_resguardo }}">Nuevo Resguardante Para {{ bien.clave_interna }}</label><select class="form-select" id="nuevoResguardante{{ bien.id_resguardo }}" name="reasignaciones[{{ bien.id_resguardo }}]" data-resguardante-selector required><option value="">Seleccionar...</option>{% for item in resguardantes_disponibles %}<option value="{{ item.id_resguardante }}" data-nombre="{{ item.nombre_completo|title }}">{{ item.csp }}</option>{% endfor %}</select><small class="form-text" data-resguardante-name></small></td>
+  </tr>{% endfor %}
+  </tbody></table></div></div>
+  <div class="d-flex justify-content-end gap-2"><a class="btn btn-outline-secondary" href="{{ get_base_url() }}catalogos/resguardantes" title="Cancelar" aria-label="Cancelar"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="visually-hidden">Cancelar</span></a><button class="btn btn-danger" type="submit" title="Cambiar Resguardante Y Desactivar" aria-label="Cambiar Resguardante Y Desactivar" {{ not resguardantes_disponibles ? 'disabled' : '' }}><i class="fa-solid fa-right-left me-1" aria-hidden="true"></i>Cambiar Resguardante Y Desactivar</button></div>
+</form>
+{% include 'includes/admin/inventory-bottom.twig' %}

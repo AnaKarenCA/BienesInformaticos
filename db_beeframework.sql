@@ -235,7 +235,7 @@ USE bienes_informaticos;
 
 CREATE TABLE unidad_administrativa (
     id_unidad INT AUTO_INCREMENT PRIMARY KEY,
-    codigo_ua VARCHAR(20) NOT NULL UNIQUE,
+    codigo_ua VARCHAR(20) NULL UNIQUE,
     nombre VARCHAR(250) NOT NULL,
     id_padre INT NULL,
 
@@ -332,7 +332,8 @@ CREATE TABLE modelo (
 
 CREATE TABLE estado_uso (
     id_estado_uso INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL UNIQUE
+    nombre VARCHAR(50) NOT NULL UNIQUE,
+    activo TINYINT(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB;
 
 
@@ -471,17 +472,25 @@ CREATE TABLE codigo_barra (
 CREATE TABLE resguardante (
     id_resguardante INT AUTO_INCREMENT PRIMARY KEY,
 
-    clave_interna VARCHAR(18) NOT NULL UNIQUE,
+    clave_interna VARCHAR(18) NULL UNIQUE,
 
     nombre VARCHAR(100) NOT NULL,
     apellido_paterno VARCHAR(100) NOT NULL,
     apellido_materno VARCHAR(100) NULL,
 
-    csp VARCHAR(9) NULL,
+    csp VARCHAR(9) NOT NULL UNIQUE,
+
+    id_unidad INT NULL,
 
     notas VARCHAR(250) NULL,
 
-    activo TINYINT(1) NOT NULL DEFAULT 1
+    activo TINYINT(1) NOT NULL DEFAULT 1,
+
+    CONSTRAINT FK_resguardante_unidad
+        FOREIGN KEY (id_unidad)
+        REFERENCES unidad_administrativa(id_unidad)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 
@@ -494,6 +503,7 @@ CREATE TABLE resguardo (
 
     id_bien INT NOT NULL,
     id_resguardante INT NOT NULL,
+    csp VARCHAR(9) NOT NULL,
 
     tipo_equipo VARCHAR(50) NULL,
 
@@ -517,6 +527,12 @@ CREATE TABLE resguardo (
     CONSTRAINT FK_resguardo_resguardante
         FOREIGN KEY (id_resguardante)
         REFERENCES resguardante(id_resguardante)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+
+    CONSTRAINT FK_resguardo_csp
+        FOREIGN KEY (csp)
+        REFERENCES resguardante(csp)
         ON UPDATE CASCADE
         ON DELETE RESTRICT
 ) ENGINE=InnoDB;
@@ -556,6 +572,25 @@ CREATE TABLE movimiento_bien (
     id_movimiento INT AUTO_INCREMENT PRIMARY KEY,
 
     id_bien INT NOT NULL,
+    id_usuario INT NULL,
+    usuario_nombre VARCHAR(255) NULL,
+
+    unidad_anterior VARCHAR(250) NULL,
+    codigo_ua_anterior VARCHAR(20) NULL,
+    unidad_nueva VARCHAR(250) NULL,
+    codigo_ua_nueva VARCHAR(20) NULL,
+    ubicacion_anterior_detalle VARCHAR(500) NULL,
+    ubicacion_nueva_detalle VARCHAR(500) NULL,
+    csp_anterior VARCHAR(9) NULL,
+    nombre_resguardante_anterior VARCHAR(305) NULL,
+    csp_nuevo VARCHAR(9) NULL,
+    nombre_resguardante_nuevo VARCHAR(305) NULL,
+    unidad_resguardante_anterior VARCHAR(250) NULL,
+    codigo_ua_resguardante_anterior VARCHAR(20) NULL,
+    unidad_resguardante_nueva VARCHAR(250) NULL,
+    codigo_ua_resguardante_nueva VARCHAR(20) NULL,
+    estado_anterior VARCHAR(30) NULL,
+    estado_nuevo VARCHAR(30) NULL,
 
     tipo_movimiento VARCHAR(50) NOT NULL,
 
@@ -576,6 +611,14 @@ CREATE TABLE movimiento_bien (
         REFERENCES bien(id_bien)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
+
+    CONSTRAINT FK_movimiento_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES bee_users(id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+
+    KEY idx_movimiento_usuario (id_usuario),
 
     CONSTRAINT FK_movimiento_ubicacion_anterior
         FOREIGN KEY (ubicacion_anterior)

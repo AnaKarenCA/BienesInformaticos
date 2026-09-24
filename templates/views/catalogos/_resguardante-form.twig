@@ -1,0 +1,16 @@
+<div class="modal fade" id="resguardanteModal" tabindex="-1" aria-labelledby="resguardanteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+    <form method="post" action="{{ get_base_url() }}catalogos/guardar/resguardante" id="resguardanteCatalogForm" data-resguardante-form data-ajax="{{ resguardante_ajax|default(false) ? '1' : '0' }}">
+      <div class="modal-header"><h2 class="modal-title fs-5" id="resguardanteModalLabel">Agregar resguardante</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+      <div class="modal-body row g-3">
+        <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="respuesta" value="{{ resguardante_ajax|default(false) ? 'json' : '' }}"><input type="hidden" name="id_resguardante" id="resguardanteId" value="">
+        <div class="col-md-4"><label class="form-label" for="resguardanteCsp">CSP *</label><input class="form-control" id="resguardanteCsp" name="csp" inputmode="numeric" pattern="[0-9]{1,9}" maxlength="9" title="Solo Números (Máximo 9 Dígitos)" aria-describedby="resguardanteCspHelp" required><div class="form-text" id="resguardanteCspHelp">Solo números.</div></div>
+        <div class="col-md-4"><label class="form-label" for="resguardanteNombre">Nombre *</label><input class="form-control" id="resguardanteNombre" name="nombre" maxlength="100" required></div>
+        <div class="col-md-4"><label class="form-label" for="resguardantePaterno">Apellido paterno *</label><input class="form-control" id="resguardantePaterno" name="apellido_paterno" maxlength="100" required></div>
+        <div class="col-md-6"><label class="form-label" for="resguardanteMaterno">Apellido materno</label><input class="form-control" id="resguardanteMaterno" name="apellido_materno" maxlength="100"></div>
+        <div class="col-md-6"><label class="form-label" for="resguardanteUnidad">Unidad administrativa *</label><select class="form-select" id="resguardanteUnidad" name="id_unidad" required><option value="">Seleccionar...</option>{% for unidad in unidades_resguardante|default(unidades) %}<option value="{{ unidad.id_unidad }}">{{ unidad.codigo_ua|default('Sin código UA') }} · {{ unidad.nombre }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn bi-btn-primary">Guardar resguardante</button></div>
+    </form>
+  </div></div>
+</div>

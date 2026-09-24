@@ -26,7 +26,7 @@
             <input type="password" class="form-control" id="password" name="password" required>
           </div>
 
-          <button class="btn btn-success btn-lg btn-block" type="submit">Agregar ahora</button>
+          <button class="btn btn-success btn-lg btn-block" type="submit" title="Agregar Usuario" aria-label="Agregar Usuario"><i class="fa-solid fa-user-plus" aria-hidden="true"></i><span class="visually-hidden">Agregar Usuario</span></button>
         </form>
       </div>
     </div>
@@ -56,14 +56,14 @@
                     <td class="text-center"><?php echo $user->email; ?></td>
                     <td class="text-end">
                       <div class="dropdown">
-                        <a class="btn btn-sm btn-secondary" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                          <i class="fas fa-chevron-down"></i>
+                        <a class="btn btn-sm btn-secondary" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Acciones" aria-label="Acciones">
+                          <i class="fas fa-ellipsis" aria-hidden="true"></i>
                         </a>
                         <ul class="dropdown-menu">
                           <?php if (!empty($user->auth_token)): ?>
-                            <li><a class="dropdown-item" href="<?php echo build_url(sprintf('admin/destruir-sesion/%s', $user->id)) ?>">Destruir sesión</a></li>
+                            <li><a class="dropdown-item" href="<?php echo build_url(sprintf('admin/destruir-sesion/%s', $user->id)) ?>" title="Destruir Sesión"><i class="fa-solid fa-right-from-bracket me-2" aria-hidden="true"></i>Destruir Sesión</a></li>
                           <?php endif; ?>
-                          <li><a class="dropdown-item confirmar" href="<?php echo build_url(sprintf('admin/borrar-usuario/%s', $user->id)) ?>">Borrar</a></li>
+                          <li><a class="dropdown-item confirmar" href="<?php echo build_url(sprintf('admin/borrar-usuario/%s', $user->id)) ?>" title="Borrar Usuario"><i class="fa-solid fa-trash me-2" aria-hidden="true"></i>Borrar Usuario</a></li>
                         </ul>
                       </div>
                     </td>

@@ -5,6 +5,8 @@
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  RewriteRule ^historico-movimientos/?$ index.php?uri=historico_movimientos [QSA,L]
+  RewriteRule ^historico-movimientos/detalle/([0-9]+)/?$ index.php?uri=historico_movimientos/detalle/$1 [QSA,L]
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule  ^(.+)$ index.php?uri=$1 [QSA,L]

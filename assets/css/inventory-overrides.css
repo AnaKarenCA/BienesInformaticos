@@ -1,0 +1,53 @@
+.bi-components-table {
+  min-width: 1040px;
+  table-layout: fixed;
+}
+.bi-components-table th:nth-child(1) { width: 14%; }
+.bi-components-table th:nth-child(2) { width: 16%; }
+.bi-components-table th:nth-child(3) { width: 16%; }
+.bi-components-table th:nth-child(4) { width: 18%; }
+.bi-components-table th:nth-child(5) { width: 36%; }
+.bi-components-table th { white-space: normal; }
+.bi-components-table td { vertical-align: middle; overflow-wrap: anywhere; }
+.bi-components-table .form-control { min-width: 0; width: 100%; }
+.barcode-svg { display: block; width: 100%; height: 130px; }
+.barcode-value { letter-spacing: .12em; }
+.catalog-global-search { width: min(100%, 440px); }
+.catalog-columns { align-items: stretch; }
+.catalog-card { display: flex; flex-direction: column; min-height: 100%; }
+.catalog-card > .list-group { flex: 1 1 auto; }
+.catalog-row { min-height: 78px; padding: .75rem 1rem; }
+.catalog-row-actions { display: flex; justify-content: flex-end; gap: .35rem; margin-top: .5rem; }
+.catalog-row-actions .btn { min-width: 34px; }
+.bi-menu-toggle,
+.bi-nav-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: calc(100% - 1.5rem);
+  margin: .45rem .75rem;
+  padding: .65rem .75rem;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: .5rem;
+  color: rgba(255,255,255,.9);
+  background: rgba(255,255,255,.07);
+  font: inherit;
+  font-size: .82rem;
+  font-weight: 700;
+  text-align: left;
+}
+.bi-menu-toggle { justify-content: flex-start; background: rgba(255,255,255,.12); }
+.bi-nav-section:hover,
+.bi-menu-toggle:hover { color: #fff; background: rgba(255,255,255,.14); }
+.bi-nav-section .fa-chevron-down { font-size: .7rem; transition: transform .18s ease; }
+.bi-nav-section[aria-expanded="true"] .fa-chevron-down { transform: rotate(180deg); }
+#biNavPrincipal .nav-link { padding-left: 1.7rem; }
+#biNavPrincipal .nav-link.active { color: #fff; font-weight: 800; background: rgba(255,255,255,.14); border-left: 3px solid #fff; }
+#biNavPrincipal .sidebar-divider { margin: .65rem .8rem; }
+@media print {
+  body * { visibility: hidden !important; }
+  .barcode-print-area, .barcode-print-area *, .ci-print-area, .ci-print-area *, .list-barcode-print-area, .list-barcode-print-area * { visibility: visible !important; }
+  .barcode-print-area, .ci-print-area, .list-barcode-print-area { position: fixed !important; inset: 0 auto auto 0; width: 100%; border: 0 !important; box-shadow: none !important; }
+  .barcode-print-area .modal-body, .ci-print-area .modal-body, .list-barcode-print-area .modal-body { display: block !important; }
+  .no-print { display: none !important; }
+}

@@ -8,30 +8,40 @@
   <link href="{{ get_base_url() }}assets/css/admin/sb-admin-2.min.css" rel="stylesheet">
   {{ get_css_framework()|raw }}
   <link href="{{ get_base_url() }}assets/css/main.css?v={{ get_asset_version() }}" rel="stylesheet">
+  <link href="{{ get_base_url() }}assets/css/inventory-overrides.css?v={{ get_asset_version() }}" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bi-body">
   <div id="wrapper">
     <nav class="navbar-nav bi-sidebar sidebar sidebar-dark accordion" id="accordionSidebar">
       <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ get_base_url() }}admin"><span class="bi-brand-mark"><i class="fa-solid fa-boxes-stacked"></i></span><span>Bienes<br>Informáticos</span></a>
-      <hr class="sidebar-divider my-0">
-      <div class="sidebar-heading">Principal</div>
-      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}admin"><i class="fa-solid fa-chart-pie"></i><span>Inicio</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}identificar"><i class="fa-solid fa-barcode"></i><span>Identificar bien</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}bienes"><i class="fa-solid fa-laptop"></i><span>Inventario</span></a></li>
-      <hr class="sidebar-divider"><div class="sidebar-heading">Documentos</div>
-      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos"><i class="fa-solid fa-clipboard-user"></i><span>Resguardos</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos/tarjeta"><i class="fa-solid fa-id-card"></i><span>Tarjeta de resguardo</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos/resguardo_equipo"><i class="fa-solid fa-file-signature"></i><span>Resguardo del equipo</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos/baja_resguardante"><i class="fa-solid fa-file-circle-minus"></i><span>Baja de resguardante</span></a></li>
-      <hr class="sidebar-divider"><div class="sidebar-heading">Catálogos</div>
-      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}catalogos/clasificacion"><i class="fa-solid fa-sitemap"></i><span>Clasificación</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}catalogos/marcas_modelos"><i class="fa-solid fa-tags"></i><span>Marcas y modelos</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}catalogos/estados_uso"><i class="fa-solid fa-heart-pulse"></i><span>Estados de uso</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}catalogos/ubicaciones"><i class="fa-solid fa-location-dot"></i><span>Ubicaciones</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}catalogos/unidades_admin"><i class="fa-solid fa-building"></i><span>Unidades administrativas</span></a></li>
-      {% if current_user.rol|default('inventario') == 'admin' %}<li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}admin/usuarios"><i class="fa-solid fa-users"></i><span>Usuarios</span></a></li>{% endif %}
+      <button class="bi-menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#biNavPrincipal" aria-expanded="true"><i class="fa-solid fa-bars me-2"></i>Menú</button>
+      <div class="collapse show" id="biNavPrincipal">
+        <div class="sidebar-heading">Principal</div>
+        <li class="nav-item"><a class="nav-link {{ controller == 'admin' ? 'active' : '' }}" href="{{ get_base_url() }}admin"><i class="fa-solid fa-chart-pie"></i><span>Inicio</span></a></li>
+        <li class="nav-item"><a class="nav-link {{ controller == 'identificar' ? 'active' : '' }}" href="{{ get_base_url() }}identificar"><i class="fa-solid fa-barcode"></i><span>Identificar bien</span></a></li>
+        <hr class="sidebar-divider"><button class="bi-nav-section collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#biNavInventario" aria-expanded="false"><span><i class="fa-solid fa-boxes-stacked me-2"></i>Inventario</span><i class="fa-solid fa-chevron-down"></i></button>
+        <div class="collapse {{ controller == 'bienes' ? 'show' : '' }}" id="biNavInventario"><li class="nav-item"><a class="nav-link {{ controller == 'bienes' ? 'active' : '' }}" href="{{ get_base_url() }}bienes"><i class="fa-solid fa-laptop"></i><span>Bienes</span></a></li></div>
+        <button class="bi-nav-section collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#biNavDocumentos" aria-expanded="false"><span><i class="fa-solid fa-folder-open me-2"></i>Documentos</span><i class="fa-solid fa-chevron-down"></i></button>
+        <div class="collapse {{ controller == 'resguardos' or controller == 'historico_movimientos' ? 'show' : '' }}" id="biNavDocumentos">
+          <li class="nav-item"><a class="nav-link {{ controller == 'resguardos' and method == 'index' ? 'active' : '' }}" href="{{ get_base_url() }}resguardos"><i class="fa-solid fa-clipboard-user"></i><span>Resguardos</span></a></li>
+          <li class="nav-item"><a class="nav-link {{ controller == 'historico_movimientos' ? 'active' : '' }}" href="{{ get_base_url() }}historico-movimientos"><i class="fa-solid fa-clock-rotate-left"></i><span>Histórico de movimientos</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos/tarjeta"><i class="fa-solid fa-id-card"></i><span>Tarjeta de resguardo</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos/resguardo_equipo"><i class="fa-solid fa-file-signature"></i><span>Resguardo del equipo</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos/baja_resguardante"><i class="fa-solid fa-file-circle-minus"></i><span>Baja de resguardante</span></a></li>
+        </div>
+        <button class="bi-nav-section collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#biNavCatalogos" aria-expanded="false"><span><i class="fa-solid fa-list me-2"></i>Catálogos</span><i class="fa-solid fa-chevron-down"></i></button>
+        <div class="collapse {{ controller == 'catalogos' ? 'show' : '' }}" id="biNavCatalogos">
+          <li class="nav-item"><a class="nav-link {{ method == 'clasificacion' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/clasificacion"><i class="fa-solid fa-sitemap"></i><span>Clasificación</span></a></li>
+          <li class="nav-item"><a class="nav-link {{ method == 'marcas_modelos' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/marcas_modelos"><i class="fa-solid fa-tags"></i><span>Marcas y modelos</span></a></li>
+          <li class="nav-item"><a class="nav-link {{ method == 'estados_uso' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/estados_uso"><i class="fa-solid fa-heart-pulse"></i><span>Estados de uso</span></a></li>
+          <li class="nav-item"><a class="nav-link {{ method == 'ubicaciones' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/ubicaciones"><i class="fa-solid fa-location-dot"></i><span>Ubicaciones</span></a></li>
+          <li class="nav-item"><a class="nav-link {{ method == 'unidades_admin' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/unidades_admin"><i class="fa-solid fa-building"></i><span>Unidades administrativas</span></a></li>
+          <li class="nav-item"><a class="nav-link {{ method == 'resguardantes' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/resguardantes"><i class="fa-solid fa-id-card-clip"></i><span>Resguardantes</span></a></li>
+          {% if current_user.rol|default('inventario') == 'admin' %}<li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}admin/usuarios"><i class="fa-solid fa-users"></i><span>Usuarios</span></a></li>{% endif %}
+        </div>
+      </div>
     </nav>
     <div id="content-wrapper" class="d-flex flex-column"><div id="content">
-      <nav class="navbar navbar-expand bi-topbar mb-4 static-top shadow"><div class="ms-auto text-white small"><i class="fa-solid fa-user me-2"></i>{{ current_user.username|default('Usuario') }} · <a class="text-white" href="{{ get_base_url() }}logout">Cerrar sesión</a></div></nav>
+      <nav class="navbar navbar-expand bi-topbar mb-4 static-top shadow"><button class="btn btn-sm btn-outline-light me-3 d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#biNavPrincipal" aria-label="Mostrar u ocultar menú"><i class="fa-solid fa-bars"></i></button><div class="ms-auto text-white small"><i class="fa-solid fa-user me-2"></i>{{ current_user.username|default('Usuario') }} · <a class="text-white" href="{{ get_base_url() }}logout">Cerrar sesión</a></div></nav>
       <main class="container-fluid px-4 pb-5">{{ flash_html|raw }}

@@ -5,9 +5,14 @@ class bienesController extends InventoryController implements ControllerInterfac
   public function index()
   {
     $this->setTitle('Inventario de bienes');
+    $bienes = BienModel::buscar($_GET);
+    if (($_GET['ajax'] ?? '') === '1') {
+      $this->renderInventory('inventory-rows', ['bienes' => $bienes]);
+      return;
+    }
     $this->renderInventory('index', [
-      'bienes' => BienModel::buscar($_GET),
-      'estados' => CatalogoModel::estados(), 'marcas' => CatalogoModel::marcas(), 'filtros' => $_GET
+      'bienes' => $bienes,
+      'filtros' => $_GET
     ]);
   }
 
@@ -20,7 +25,7 @@ class bienesController extends InventoryController implements ControllerInterfac
   public function editar($id = null)
   {
     $this->can('bienes-guardar');
-    $bien = BienModel::porId((int) $id);
+    $bien = BienModel::porId((int) $id, false);
     if (!$bien) { Flasher::error('El bien solicitado no existe.'); Redirect::to('bienes'); }
     $this->formulario($bien);
   }
@@ -31,12 +36,14 @@ class bienesController extends InventoryController implements ControllerInterfac
     $this->setTitle(empty($bien) ? 'Registrar bien' : 'Editar bien');
     $this->renderInventory('registrar', [
       'bien' => $bien, 'siguiente_ci' => $bien['clave_interna'] ?? BienModel::siguienteCI(),
-      'activos_genericos' => CatalogoModel::activosGenericos(), 'grupos' => CatalogoModel::grupos($bien['id_activo_generico'] ?? null),
-      'activos_especificos' => CatalogoModel::activosEspecificos($bien['id_grupo_activo'] ?? null),
+      'activos_genericos' => CatalogoModel::activosGenericos($bien['id_activo_generico'] ?? null),
+      'grupos' => CatalogoModel::grupos($bien['id_activo_generico'] ?? null, $bien['id_grupo_activo'] ?? null),
+      'activos_especificos' => CatalogoModel::activosEspecificos($bien['id_grupo_activo'] ?? null, $bien['id_activo_especifico'] ?? null),
       'todos_grupos' => CatalogoModel::grupos(), 'todos_especificos' => CatalogoModel::activosEspecificos(),
       'marcas' => CatalogoModel::marcas(), 'modelos' => CatalogoModel::modelos(),
-      'estados' => CatalogoModel::estados(), 'unidades' => $unidades, 'ubicaciones' => CatalogoModel::ubicaciones(), 'municipios' => CatalogoModel::municipios(),
-      'resguardantes' => ResguardanteModel::activos(),
+      'estados' => CatalogoModel::estados($bien['id_estado_uso'] ?? null), 'unidades' => $unidades, 'ubicaciones' => CatalogoModel::ubicaciones(), 'municipios' => CatalogoModel::municipios(),
+      'resguardantes' => ResguardanteModel::activos($bien['id_resguardante'] ?? null),
+      'unidades_resguardante' => $unidades,
       'unidades_json' => json_encode($unidades, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT),
       'componentes_json' => json_encode($bien['componentes'] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)
     ]);
@@ -47,7 +54,8 @@ class bienesController extends InventoryController implements ControllerInterfac
     $bien = BienModel::porId((int) $id);
     if (!$bien) { Flasher::error('El bien solicitado no existe.'); Redirect::to('bienes'); }
     $this->setTitle('Detalle del bien');
-    $this->renderInventory('detalle', ['bien' => $bien]);
+    $codigoBarra = !empty($bien['clave_interna']) ? BienModel::codigoBarra((int) $id) : [];
+    $this->renderInventory('detalle', ['bien' => $bien, 'codigo_barra' => $codigoBarra]);
   }
 
   public function codigo_barra($id = null)
@@ -63,11 +71,15 @@ class bienesController extends InventoryController implements ControllerInterfac
   {
     try {
       $this->can('bienes-guardar');
-      if (!Csrf::validate($_POST['csrf'] ?? '') || empty($_POST['numero_inventario']) || empty($_POST['nombre_bien']) || empty($_POST['id_grupo_activo']) || empty($_POST['activo_especifico_nombre']) || empty($_POST['codigo_ua'])) {
+      if (!Csrf::validate($_POST['csrf'] ?? '') || empty($_POST['numero_inventario']) || empty($_POST['nombre_bien']) || empty($_POST['id_grupo_activo']) || empty($_POST['activo_especifico_nombre']) || empty($_POST['id_unidad'])) {
         throw new Exception('Completa los campos obligatorios del bien.');
       }
-      $unidad = CatalogoModel::unidadPorCodigo((string) $_POST['codigo_ua']);
+      $unidad = CatalogoModel::unidadPorId((int) $_POST['id_unidad']);
       if (!$unidad) throw new Exception('Selecciona un Código de Unidad Administrativa válido.');
+      $codigoCapturado = trim((string) ($_POST['codigo_ua'] ?? ''));
+      if ($unidad['codigo_ua'] !== null && $codigoCapturado !== (string) $unidad['codigo_ua']) {
+        throw new Exception('El Código de Unidad Administrativa no corresponde a la unidad seleccionada.');
+      }
       $_POST['id_unidad'] = $unidad['id_unidad'];
       if (!empty($_POST['modelo_nombre']) && empty($_POST['id_marca'])) throw new Exception('Selecciona una marca para el modelo capturado.');
       $nullable = ['nic_cea', 'material', 'id_marca', 'modelo_nombre', 'color', 'id_estado_uso', 'numero_serie', 'caracteristicas', 'observaciones', 'fecha_alta', 'fecha_adquisicion', 'fecha_elaboracion', 'fecha_asignacion', 'valor', 'id_ubicacion', 'piso', 'seccion_ala', 'cubiculo'];
@@ -78,12 +90,15 @@ class bienesController extends InventoryController implements ControllerInterfac
       }
       $datos['nombre_bien'] = trim($_POST['nombre_bien']);
       $datos['caracteristicas'] = $datos['caracteristicas'] ?: 'S/C';
-      $datos['activo'] = isset($_POST['activo']) ? 1 : 0;
+      $observaciones = (string) ($_POST['observaciones'] ?? '');
+      $datos['observaciones'] = $observaciones === '' ? 'S/O' : $observaciones;
+      if (!$id) $datos['activo'] = 1;
       if (BienModel::inventarioEnUso((string) $datos['numero_inventario'], $id ? (int) $id : null)) throw new Exception('El Inventario SICOPA ya está asignado a otro bien.');
       $componentes = json_decode($_POST['componentes'] ?? '[]', true) ?: [];
       if (!is_array($componentes)) throw new Exception('Los componentes recibidos no son válidos.');
-      $bienId = BienModel::guardar($datos, $componentes, $id ? (int) $id : null);
-      BienModel::asignarResguardante($bienId, !empty($_POST['id_resguardante']) ? (int) $_POST['id_resguardante'] : null, $datos['fecha_asignacion']);
+      $bienId = BienModel::guardar($datos, $componentes, $id ? (int) $id : null, get_user() ?: null);
+      $cspSeleccionado = trim((string) ($_POST['csp'] ?? ''));
+      BienModel::asignarResguardante($bienId, $cspSeleccionado !== '' ? $cspSeleccionado : null, $datos['fecha_asignacion'], get_user() ?: null);
       Flasher::success('El bien fue guardado correctamente.');
       Redirect::to('bienes/detalle/' . $bienId);
     } catch (Exception $e) {
@@ -97,7 +112,7 @@ class bienesController extends InventoryController implements ControllerInterfac
     try {
       $this->can('bienes-inactivar');
       if (!Csrf::validate($_GET['_t'] ?? '')) throw new Exception(get_bee_message(0));
-      if (!BienModel::cambiarEstado((int) $id)) throw new Exception('No fue posible actualizar el estado del bien.');
+      if (!BienModel::cambiarEstado((int) $id, get_user() ?: null)) throw new Exception('No fue posible actualizar el estado del bien.');
       Flasher::success('Estado del bien actualizado.');
     } catch (Exception $e) { Flasher::error($e->getMessage()); }
     Redirect::back();

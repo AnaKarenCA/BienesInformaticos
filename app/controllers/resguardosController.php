@@ -5,7 +5,18 @@ class resguardosController extends InventoryController implements ControllerInte
   public function index()
   {
     $this->setTitle('Resguardos');
-    $this->renderInventory('index', ['vigentes' => ResguardoModel::vigentes(), 'historico' => ResguardoModel::historico()]);
+    $resguardantes = ResguardoModel::resumenResguardantes();
+    $this->renderInventory('index', ['resguardantes' => $resguardantes]);
+  }
+
+  public function detalle($id = null)
+  {
+    $detalle = ResguardoModel::detalleResguardante((int) $id);
+    if (!$detalle) { Flasher::error('El resguardante solicitado no existe.'); Redirect::to('resguardos'); }
+    $detalle['bienes_asignados'] = count(array_filter($detalle['asignaciones'], static fn($a) => (int) $a['activo'] === 1));
+    $detalle['bienes_activos'] = count(array_filter($detalle['asignaciones'], static fn($a) => (int) $a['activo'] === 1 && (int) $a['bien_activo'] === 1));
+    $this->setTitle('Detalle de resguardo');
+    $this->renderInventory('detalle', ['resguardo' => $detalle]);
   }
 
   public function tarjeta($id = null) { $this->documento('tarjeta', $id); }
