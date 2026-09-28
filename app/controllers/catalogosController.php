@@ -2,16 +2,35 @@
 
 class catalogosController extends InventoryController implements ControllerInterface
 {
+  public function __construct()
+  {
+    parent::__construct();
+  }
+
   public function index() { $this->clasificacion(); }
   public function clasificacion()
   {
     $this->setTitle('Clasificación de activos');
     $genericos = CatalogoModel::administrar('generico');
     $grupos = CatalogoModel::administrar('grupo');
+    $especificos = CatalogoModel::administrar('especifico');
+    $especificosPorGrupo = [];
+    foreach ($especificos as $especifico) $especificosPorGrupo[(int) $especifico['id_grupo_activo']][] = $especifico;
+    $gruposPorGenerico = [];
+    foreach ($grupos as $grupo) {
+      $grupo['activos_especificos'] = $especificosPorGrupo[(int) $grupo['id_grupo_activo']] ?? [];
+      $gruposPorGenerico[(int) $grupo['id_activo_generico']][] = $grupo;
+    }
+    $clasificacionTree = [];
+    foreach ($genericos as $generico) {
+      $generico['grupos'] = $gruposPorGenerico[(int) $generico['id_activo_generico']] ?? [];
+      $clasificacionTree[] = $generico;
+    }
     $this->renderInventory('clasificacion', [
       'genericos' => $genericos, 'grupos' => $grupos,
-      'especificos' => CatalogoModel::administrar('especifico'), 'genericos_para_modal' => $genericos,
-      'grupos_para_modal' => $grupos, 'busqueda' => (string) ($_GET['q'] ?? '')
+      'especificos' => $especificos, 'clasificacion_tree' => $clasificacionTree,
+      'genericos_para_modal' => $genericos, 'grupos_para_modal' => $grupos,
+      'busqueda' => (string) ($_GET['q'] ?? '')
     ]);
   }
   public function marcas_modelos() { $this->setTitle('Marcas y modelos'); $this->renderInventory('marcas-modelos', ['marcas' => CatalogoModel::administrar('marca'), 'modelos' => CatalogoModel::administrar('modelo'), 'busqueda' => (string) ($_GET['q'] ?? '')]); }
@@ -31,7 +50,7 @@ class catalogosController extends InventoryController implements ControllerInter
 
   public function cambiar_resguardante($id = null)
   {
-    $this->can('catalogos-gestionar');
+    $this->can('bienes-inactivar');
     $anteriorId = (int) $id;
     $actual = ResguardanteModel::porId($anteriorId);
     if (!$actual) { Flasher::error('El resguardante solicitado no existe.'); Redirect::to('catalogos/resguardantes'); }
@@ -60,7 +79,7 @@ class catalogosController extends InventoryController implements ControllerInter
   {
     $esJson = ($_POST['respuesta'] ?? '') === 'json';
     try {
-      $this->can('catalogos-gestionar');
+      $this->can('catalogos-guardar');
       if (!Csrf::validate($_POST['csrf'] ?? '')) throw new Exception(get_bee_message(0));
       if ($tipo === 'resguardante') {
         $resguardanteId = $id ? (int) $id : (!empty($_POST['id_resguardante']) ? (int) $_POST['id_resguardante'] : null);
@@ -90,7 +109,7 @@ class catalogosController extends InventoryController implements ControllerInter
   public function cambiar_estado($tipo = null, $id = null)
   {
     try {
-      $this->can('catalogos-gestionar');
+      $this->can('catalogos-inactivar');
       if (!Csrf::validate($_GET['_t'] ?? '')) throw new Exception(get_bee_message(0));
       if ($tipo === 'resguardante') ResguardanteModel::cambiarEstado((int) $id);
       else CatalogoModel::cambiarEstado((string) $tipo, (int) $id);
@@ -102,7 +121,7 @@ class catalogosController extends InventoryController implements ControllerInter
   public function eliminar_unidad($id = null)
   {
     try {
-      $this->can('catalogos-gestionar');
+      $this->can('catalogos-eliminar');
       if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('La solicitud de eliminación no es válida.');
       if (!Csrf::validate($_POST['csrf'] ?? '')) throw new Exception(get_bee_message(0));
       CatalogoModel::eliminarUnidadSiNoTieneDependencias((int) $id);

@@ -170,8 +170,8 @@ class PaginationHandler extends Model
 	 */
 	public function get_total_rows()
 	{
-		$counted     = parent::query($this->query, $this->params);
-		$this->total = !empty($counted) ? count($counted) : 0;
+		$counted     = parent::query('SELECT COUNT(*) AS total FROM (' . $this->query . ') AS pagination_count', $this->params);
+		$this->total = (int) ($counted[0]['total'] ?? 0);
 		return $this->total;
 	}
 
@@ -182,7 +182,7 @@ class PaginationHandler extends Model
 	 */
 	public function calculate_pages()
 	{
-		$this->pages = ceil($this->total / $this->limit);
+		$this->pages = max(1, (int) ceil($this->total / $this->limit));
 		return $this->pages;
 	}
 

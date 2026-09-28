@@ -1,47 +1,66 @@
 <!doctype html>
 <html lang="es">
 <head>
+  {% set visibleTitle = controller == 'bienes' and title == 'Inventario de bienes' ? 'Inventario' : title %}
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ title }} · {{ get_sitename() }}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <title>{{ visibleTitle }} · {{ get_sitename() }}</title>
   <link href="{{ get_base_url() }}assets/css/admin/sb-admin-2.min.css" rel="stylesheet">
   {{ get_css_framework()|raw }}
   <link href="{{ get_base_url() }}assets/css/main.css?v={{ get_asset_version() }}" rel="stylesheet">
   <link href="{{ get_base_url() }}assets/css/inventory-overrides.css?v={{ get_asset_version() }}" rel="stylesheet">
+  <link href="{{ get_base_url() }}assets/css/system-ui.css?v={{ get_asset_version() }}" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bi-body">
-  <div id="wrapper">
-    <nav class="navbar-nav bi-sidebar sidebar sidebar-dark accordion" id="accordionSidebar">
-      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ get_base_url() }}admin"><span class="bi-brand-mark"><i class="fa-solid fa-boxes-stacked"></i></span><span>Bienes<br>Informáticos</span></a>
-      <button class="bi-menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#biNavPrincipal" aria-expanded="true"><i class="fa-solid fa-bars me-2"></i>Menú</button>
-      <div class="collapse show" id="biNavPrincipal">
+  <a class="bi-skip-link" href="#mainContent">Saltar al contenido principal</a>
+  <div id="wrapper" class="d-flex">
+    <nav class="navbar-nav bi-sidebar sidebar sidebar-dark accordion" id="accordionSidebar" aria-label="Navegación principal">
+      <a class="sidebar-brand d-flex align-items-center" href="{{ get_base_url() }}admin" aria-label="Ir al inicio: Bienes Informáticos" title="Bienes Informáticos">
+        <span class="bi-brand-mark" aria-hidden="true"><i class="fa-solid fa-boxes-stacked"></i></span><span class="bi-brand-name">Bienes Informáticos</span>
+      </a>
+      <div id="biNavPrincipal">
         <div class="sidebar-heading">Principal</div>
-        <li class="nav-item"><a class="nav-link {{ controller == 'admin' ? 'active' : '' }}" href="{{ get_base_url() }}admin"><i class="fa-solid fa-chart-pie"></i><span>Inicio</span></a></li>
-        <li class="nav-item"><a class="nav-link {{ controller == 'identificar' ? 'active' : '' }}" href="{{ get_base_url() }}identificar"><i class="fa-solid fa-barcode"></i><span>Identificar bien</span></a></li>
-        <hr class="sidebar-divider"><button class="bi-nav-section collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#biNavInventario" aria-expanded="false"><span><i class="fa-solid fa-boxes-stacked me-2"></i>Inventario</span><i class="fa-solid fa-chevron-down"></i></button>
-        <div class="collapse {{ controller == 'bienes' ? 'show' : '' }}" id="biNavInventario"><li class="nav-item"><a class="nav-link {{ controller == 'bienes' ? 'active' : '' }}" href="{{ get_base_url() }}bienes"><i class="fa-solid fa-laptop"></i><span>Bienes</span></a></li></div>
-        <button class="bi-nav-section collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#biNavDocumentos" aria-expanded="false"><span><i class="fa-solid fa-folder-open me-2"></i>Documentos</span><i class="fa-solid fa-chevron-down"></i></button>
+        <div class="nav-item"><a class="nav-link {{ controller == 'admin' and method == 'index' ? 'active' : '' }}" href="{{ get_base_url() }}admin" aria-label="Inicio" title="Inicio" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Inicio" {% if controller == 'admin' and method == 'index' %}aria-current="page"{% endif %}><i class="fa-solid fa-house" aria-hidden="true"></i><span>Inicio</span></a></div>
+        <div class="nav-item"><a class="nav-link {{ controller == 'identificar' ? 'active' : '' }}" href="{{ get_base_url() }}identificar" aria-label="Identificar bien" title="Identificar bien" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Identificar bien" {% if controller == 'identificar' %}aria-current="page"{% endif %}><i class="fa-solid fa-barcode" aria-hidden="true"></i><span>Identificar bien</span></a></div>
+        <div class="nav-item"><a class="nav-link {{ controller == 'bienes' ? 'active' : '' }}" href="{{ get_base_url() }}bienes" aria-label="Inventario" title="Inventario" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Inventario" {% if controller == 'bienes' %}aria-current="page"{% endif %}><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i><span>Inventario</span></a></div>
+        <hr class="sidebar-divider">
+        <button class="bi-nav-section" type="button" data-bs-toggle="collapse" data-bs-target="#biNavDocumentos" aria-controls="biNavDocumentos" aria-expanded="{{ controller == 'resguardos' or controller == 'historico_movimientos' ? 'true' : 'false' }}" aria-label="Documentos y movimientos" title="Documentos y movimientos"><i class="fa-solid fa-folder-open bi-section-icon" aria-hidden="true"></i><span class="bi-nav-label">Documentos y movimientos</span><i class="fa-solid fa-chevron-down bi-chevron" aria-hidden="true"></i></button>
         <div class="collapse {{ controller == 'resguardos' or controller == 'historico_movimientos' ? 'show' : '' }}" id="biNavDocumentos">
-          <li class="nav-item"><a class="nav-link {{ controller == 'resguardos' and method == 'index' ? 'active' : '' }}" href="{{ get_base_url() }}resguardos"><i class="fa-solid fa-clipboard-user"></i><span>Resguardos</span></a></li>
-          <li class="nav-item"><a class="nav-link {{ controller == 'historico_movimientos' ? 'active' : '' }}" href="{{ get_base_url() }}historico-movimientos"><i class="fa-solid fa-clock-rotate-left"></i><span>Histórico de movimientos</span></a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos/tarjeta"><i class="fa-solid fa-id-card"></i><span>Tarjeta de resguardo</span></a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos/resguardo_equipo"><i class="fa-solid fa-file-signature"></i><span>Resguardo del equipo</span></a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos/baja_resguardante"><i class="fa-solid fa-file-circle-minus"></i><span>Baja de resguardante</span></a></li>
+          <div class="nav-item"><a class="nav-link {{ controller == 'resguardos' ? 'active' : '' }}" href="{{ get_base_url() }}resguardos" aria-label="Resguardos" title="Resguardos" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Resguardos" {% if controller == 'resguardos' %}aria-current="page"{% endif %}><i class="fa-solid fa-clipboard-user" aria-hidden="true"></i><span>Resguardos</span></a></div>
+          <div class="nav-item"><a class="nav-link {{ controller == 'historico_movimientos' ? 'active' : '' }}" href="{{ get_base_url() }}historico-movimientos" aria-label="Histórico de movimientos" title="Histórico de movimientos" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Histórico de movimientos" {% if controller == 'historico_movimientos' %}aria-current="page"{% endif %}><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i><span>Histórico de movimientos</span></a></div>
+          {% if can_access_documents|default(false) %}<div class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos/tarjeta" aria-label="Tarjeta de resguardo" title="Tarjeta de resguardo" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Tarjeta de resguardo"><i class="fa-solid fa-id-card" aria-hidden="true"></i><span>Tarjeta de resguardo</span></a></div>
+          <div class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos/resguardo_equipo" aria-label="Resguardo del equipo" title="Resguardo del equipo" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Resguardo del equipo"><i class="fa-solid fa-file-signature" aria-hidden="true"></i><span>Resguardo del equipo</span></a></div>
+          <div class="nav-item"><a class="nav-link" href="{{ get_base_url() }}resguardos/baja_resguardante" aria-label="Baja de resguardante" title="Baja de resguardante" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Baja de resguardante"><i class="fa-solid fa-file-circle-minus" aria-hidden="true"></i><span>Baja de resguardante</span></a></div>
+          {% endif %}
         </div>
-        <button class="bi-nav-section collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#biNavCatalogos" aria-expanded="false"><span><i class="fa-solid fa-list me-2"></i>Catálogos</span><i class="fa-solid fa-chevron-down"></i></button>
+        {% if can_view_catalogs|default(false) %}
+        <button class="bi-nav-section" type="button" data-bs-toggle="collapse" data-bs-target="#biNavCatalogos" aria-controls="biNavCatalogos" aria-expanded="{{ controller == 'catalogos' ? 'true' : 'false' }}" aria-label="Catálogos" title="Catálogos"><i class="fa-solid fa-list bi-section-icon" aria-hidden="true"></i><span class="bi-nav-label">Catálogos</span><i class="fa-solid fa-chevron-down bi-chevron" aria-hidden="true"></i></button>
         <div class="collapse {{ controller == 'catalogos' ? 'show' : '' }}" id="biNavCatalogos">
-          <li class="nav-item"><a class="nav-link {{ method == 'clasificacion' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/clasificacion"><i class="fa-solid fa-sitemap"></i><span>Clasificación</span></a></li>
-          <li class="nav-item"><a class="nav-link {{ method == 'marcas_modelos' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/marcas_modelos"><i class="fa-solid fa-tags"></i><span>Marcas y modelos</span></a></li>
-          <li class="nav-item"><a class="nav-link {{ method == 'estados_uso' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/estados_uso"><i class="fa-solid fa-heart-pulse"></i><span>Estados de uso</span></a></li>
-          <li class="nav-item"><a class="nav-link {{ method == 'ubicaciones' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/ubicaciones"><i class="fa-solid fa-location-dot"></i><span>Ubicaciones</span></a></li>
-          <li class="nav-item"><a class="nav-link {{ method == 'unidades_admin' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/unidades_admin"><i class="fa-solid fa-building"></i><span>Unidades administrativas</span></a></li>
-          <li class="nav-item"><a class="nav-link {{ method == 'resguardantes' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/resguardantes"><i class="fa-solid fa-id-card-clip"></i><span>Resguardantes</span></a></li>
-          {% if current_user.rol|default('inventario') == 'admin' %}<li class="nav-item"><a class="nav-link" href="{{ get_base_url() }}admin/usuarios"><i class="fa-solid fa-users"></i><span>Usuarios</span></a></li>{% endif %}
+          <div class="nav-item"><a class="nav-link {{ method == 'clasificacion' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/clasificacion" aria-label="Clasificación" title="Clasificación" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Clasificación" {% if method == 'clasificacion' %}aria-current="page"{% endif %}><i class="fa-solid fa-sitemap" aria-hidden="true"></i><span>Clasificación</span></a></div>
+          <div class="nav-item"><a class="nav-link {{ method == 'marcas_modelos' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/marcas_modelos" aria-label="Marcas y modelos" title="Marcas y modelos" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Marcas y modelos" {% if method == 'marcas_modelos' %}aria-current="page"{% endif %}><i class="fa-solid fa-tags" aria-hidden="true"></i><span>Marcas y modelos</span></a></div>
+          <div class="nav-item"><a class="nav-link {{ method == 'estados_uso' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/estados_uso" aria-label="Estados de uso" title="Estados de uso" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Estados de uso" {% if method == 'estados_uso' %}aria-current="page"{% endif %}><i class="fa-solid fa-heart-pulse" aria-hidden="true"></i><span>Estados de uso</span></a></div>
+          <div class="nav-item"><a class="nav-link {{ method == 'ubicaciones' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/ubicaciones" aria-label="Ubicaciones" title="Ubicaciones" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Ubicaciones" {% if method == 'ubicaciones' %}aria-current="page"{% endif %}><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Ubicaciones</span></a></div>
+          <div class="nav-item"><a class="nav-link {{ method == 'unidades_admin' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/unidades_admin" aria-label="Unidades administrativas" title="Unidades administrativas" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Unidades administrativas" {% if method == 'unidades_admin' %}aria-current="page"{% endif %}><i class="fa-solid fa-building" aria-hidden="true"></i><span>Unidades administrativas</span></a></div>
+          <div class="nav-item"><a class="nav-link {{ method == 'resguardantes' or method == 'cambiar_resguardante' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/resguardantes" aria-label="Resguardantes" title="Resguardantes" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Resguardantes" {% if method == 'resguardantes' %}aria-current="page"{% endif %}><i class="fa-solid fa-id-card-clip" aria-hidden="true"></i><span>Resguardantes</span></a></div>
         </div>
+        {% endif %}
+        {% if can_admin_users|default(false) %}
+        <button class="bi-nav-section" type="button" data-bs-toggle="collapse" data-bs-target="#biNavAdministracion" aria-controls="biNavAdministracion" aria-expanded="{{ controller == 'admin' and (method == 'usuarios' or method == 'matriz_permisos') ? 'true' : 'false' }}" aria-label="Administración" title="Administración"><i class="fa-solid fa-user-gear bi-section-icon" aria-hidden="true"></i><span class="bi-nav-label">Administración</span><i class="fa-solid fa-chevron-down bi-chevron" aria-hidden="true"></i></button>
+        <div class="collapse {{ controller == 'admin' and (method == 'usuarios' or method == 'matriz_permisos') ? 'show' : '' }}" id="biNavAdministracion">
+          <div class="nav-item"><a class="nav-link {{ controller == 'admin' and method == 'usuarios' ? 'active' : '' }}" href="{{ get_base_url() }}admin/usuarios" aria-label="Todos los usuarios" title="Todos los usuarios"><i class="fa-solid fa-users" aria-hidden="true"></i><span>Todos los usuarios{% if pending_user_count|default(0) > 0 %} <span class="badge text-bg-warning">{{ pending_user_count }}</span>{% endif %}</span></a></div>
+          {% if can_manage_role_permissions|default(false) %}<div class="nav-item"><a class="nav-link {{ controller == 'admin' and method == 'matriz_permisos' ? 'active' : '' }}" href="{{ get_base_url() }}admin/matriz-permisos" aria-label="Matriz de permisos" title="Matriz de permisos"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Roles y permisos</span></a></div>{% endif %}
+        </div>
+        {% endif %}
       </div>
     </nav>
+    <div class="bi-sidebar-backdrop" data-bi-sidebar-backdrop aria-hidden="true"></div>
     <div id="content-wrapper" class="d-flex flex-column"><div id="content">
-      <nav class="navbar navbar-expand bi-topbar mb-4 static-top shadow"><button class="btn btn-sm btn-outline-light me-3 d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#biNavPrincipal" aria-label="Mostrar u ocultar menú"><i class="fa-solid fa-bars"></i></button><div class="ms-auto text-white small"><i class="fa-solid fa-user me-2"></i>{{ current_user.username|default('Usuario') }} · <a class="text-white" href="{{ get_base_url() }}logout">Cerrar sesión</a></div></nav>
-      <main class="container-fluid px-4 pb-5">{{ flash_html|raw }}
+      <nav class="navbar navbar-expand bi-topbar" aria-label="Barra superior">
+        <button class="btn bi-topbar-toggle me-3" type="button" id="biNavToggle" aria-label="Mostrar u ocultar menú" aria-controls="accordionSidebar" aria-expanded="true" title="Mostrar u ocultar menú"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
+        <span class="bi-current-page">{{ visibleTitle|default('Bienes Informáticos') }}</span>
+        <div class="ms-auto text-end small bi-user-menu"><i class="fa-solid fa-user me-2" aria-hidden="true"></i><span>{{ current_user.username|default('Usuario') }}</span><span class="mx-2 text-muted">·</span><a href="{{ get_base_url() }}logout">Cerrar sesión</a></div>
+      </nav>
+      <main class="container-fluid pb-5" id="mainContent" tabindex="-1">
+        {% if controller != 'admin' %}<nav class="bi-breadcrumbs" aria-label="Ruta de navegación"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{{ get_base_url() }}admin">Inicio</a></li><li class="breadcrumb-item active" aria-current="page">{{ visibleTitle|default('Sección') }}</li></ol></nav>{% endif %}
+        {{ flash_html|raw }}

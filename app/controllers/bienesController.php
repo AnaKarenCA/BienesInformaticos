@@ -100,7 +100,7 @@ class bienesController extends InventoryController implements ControllerInterfac
       $cspSeleccionado = trim((string) ($_POST['csp'] ?? ''));
       BienModel::asignarResguardante($bienId, $cspSeleccionado !== '' ? $cspSeleccionado : null, $datos['fecha_asignacion'], get_user() ?: null);
       Flasher::success('El bien fue guardado correctamente.');
-      Redirect::to('bienes/detalle/' . $bienId);
+      Redirect::to($id ? 'bienes' : 'bienes/detalle/' . $bienId);
     } catch (Exception $e) {
       Flasher::error($e->getMessage());
       Redirect::back();

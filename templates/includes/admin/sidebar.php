@@ -1,116 +1,62 @@
-<!-- Sidebar -->
-<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
-
-  <!-- Sidebar - Brand -->
-  <a class="sidebar-brand d-flex align-items-center justify-content-center" href="<?php echo get_base_url(); ?>">
-    <img src="<?php echo get_bee_logo(); ?>" alt="<?php echo get_bee_name(); ?>" width="100px">
+<nav class="navbar-nav sidebar sidebar-dark accordion bi-legacy-sidebar" id="accordionSidebar" aria-label="Navegación principal">
+  <a class="sidebar-brand d-flex align-items-center justify-content-center" href="admin" aria-label="Ir al inicio" title="Bienes Informáticos">
+    <span class="sidebar-brand-icon"><i class="fas fa-boxes-stacked" aria-hidden="true"></i></span>
+    <span class="sidebar-brand-text mx-2">Bienes Informáticos</span>
   </a>
 
-  <!-- Divider -->
   <hr class="sidebar-divider my-0">
-
-  <!-- Nav Item - Dashboard -->
-  <li class="nav-item active">
-    <a class="nav-link" href="admin">
-      <i class="fas fa-fw fa-tachometer"></i>
-      <span>Dashboard</span>
-    </a>
-  </li>
-
-  <!-- Divider -->
+  <div class="sidebar-heading">Principal</div>
+  <div class="nav-item <?php echo CONTROLLER === 'admin' && METHOD === 'index' ? 'active' : ''; ?>">
+    <a class="nav-link" href="admin" aria-label="Inicio" title="Inicio" <?php echo CONTROLLER === 'admin' && METHOD === 'index' ? 'aria-current="page"' : ''; ?>><i class="fas fa-fw fa-chart-pie" aria-hidden="true"></i><span>Inicio</span></a>
+  </div>
   <hr class="sidebar-divider">
 
-  <!-- Heading -->
-  <div class="sidebar-heading">
-    Bee framework
+  <button class="bi-nav-section" type="button" data-toggle="collapse" data-target="#legacyInventory" aria-controls="legacyInventory" aria-expanded="<?php echo in_array(CONTROLLER, ['identificar', 'bienes'], true) ? 'true' : 'false'; ?>" aria-label="Inventario" title="Inventario"><i class="fas fa-fw fa-boxes-stacked me-2" aria-hidden="true"></i><span class="bi-nav-label">Inventario</span><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
+  <div class="collapse <?php echo in_array(CONTROLLER, ['identificar', 'bienes'], true) ? 'show' : ''; ?>" id="legacyInventory">
+    <div class="nav-item <?php echo CONTROLLER === 'identificar' ? 'active' : ''; ?>"><a class="nav-link" href="identificar" aria-label="Identificar bien" title="Identificar bien"><i class="fas fa-fw fa-barcode" aria-hidden="true"></i><span>Identificar bien</span></a></div>
+    <div class="nav-item <?php echo CONTROLLER === 'bienes' ? 'active' : ''; ?>"><a class="nav-link" href="bienes" aria-label="Inventario" title="Inventario"><i class="fas fa-fw fa-laptop" aria-hidden="true"></i><span>Inventario</span></a></div>
   </div>
-
-  <li class="nav-item">
-    <a class="nav-link" href="creator">
-      <i class="fas fa-fw fa-pen"></i>
-      <span>Creator</span>
-    </a>
-  </li>
-
-  <!-- Nav Item - Pages Collapse Menu -->
-  <li class="nav-item">
-    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
-      <i class="fas fa-fw fa-cog"></i>
-      <span>Componentes</span>
-    </a>
-    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-      <div class="bg-white py-2 collapse-inner rounded">
-        <h6 class="collapse-header">SB Admin 2</h6>
-        <a class="collapse-item" href="https://startbootstrap.com/theme/sb-admin-2" target="_blank">Template original</a>
-        <a class="collapse-item" href="admin/botones">Botones</a>
-        <a class="collapse-item" href="admin/cartas">Cartas</a>
-      </div>
-    </div>
-  </li>
-
-  <!-- Divider -->
+  <button class="bi-nav-section" type="button" data-toggle="collapse" data-target="#legacyCustody" aria-controls="legacyCustody" aria-expanded="<?php echo in_array(CONTROLLER, ['resguardos', 'historico_movimientos'], true) ? 'true' : 'false'; ?>" aria-label="Resguardos y movimientos" title="Resguardos y movimientos"><i class="fas fa-fw fa-folder-open me-2" aria-hidden="true"></i><span class="bi-nav-label">Resguardos y movimientos</span><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
+  <div class="collapse <?php echo in_array(CONTROLLER, ['resguardos', 'historico_movimientos'], true) ? 'show' : ''; ?>" id="legacyCustody">
+    <div class="nav-item <?php echo CONTROLLER === 'resguardos' ? 'active' : ''; ?>"><a class="nav-link" href="resguardos" aria-label="Resguardos" title="Resguardos"><i class="fas fa-fw fa-clipboard-user" aria-hidden="true"></i><span>Resguardos</span></a></div>
+    <div class="nav-item <?php echo CONTROLLER === 'historico_movimientos' ? 'active' : ''; ?>"><a class="nav-link" href="historico-movimientos" aria-label="Histórico de movimientos" title="Histórico de movimientos"><i class="fas fa-fw fa-clock-rotate-left" aria-hidden="true"></i><span>Histórico de movimientos</span></a></div>
+    <?php if (can_user((string) get_user('rol'), 'inventario-consultar')): ?><div class="nav-item"><a class="nav-link" href="resguardos/tarjeta" aria-label="Tarjeta de resguardo" title="Tarjeta de resguardo"><i class="fas fa-fw fa-id-card" aria-hidden="true"></i><span>Tarjeta de resguardo</span></a></div>
+    <div class="nav-item"><a class="nav-link" href="resguardos/resguardo_equipo" aria-label="Resguardo del equipo" title="Resguardo del equipo"><i class="fas fa-fw fa-file-signature" aria-hidden="true"></i><span>Resguardo del equipo</span></a></div>
+    <div class="nav-item"><a class="nav-link" href="resguardos/baja_resguardante" aria-label="Baja de resguardante" title="Baja de resguardante"><i class="fas fa-fw fa-file-circle-minus" aria-hidden="true"></i><span>Baja de resguardante</span></a></div>
+    <?php endif; ?>
+  </div>
+  <?php if (can_user((string) get_user('rol'), 'inventario-consultar')): ?>
+  <button class="bi-nav-section" type="button" data-toggle="collapse" data-target="#legacyCatalogs" aria-controls="legacyCatalogs" aria-expanded="<?php echo CONTROLLER === 'catalogos' ? 'true' : 'false'; ?>" aria-label="Catálogos" title="Catálogos"><i class="fas fa-fw fa-list me-2" aria-hidden="true"></i><span class="bi-nav-label">Catálogos</span><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
+  <div class="collapse <?php echo CONTROLLER === 'catalogos' ? 'show' : ''; ?>" id="legacyCatalogs">
+    <div class="nav-item <?php echo CONTROLLER === 'catalogos' && METHOD === 'clasificacion' ? 'active' : ''; ?>"><a class="nav-link" href="catalogos/clasificacion" aria-label="Clasificación" title="Clasificación"><i class="fas fa-fw fa-sitemap" aria-hidden="true"></i><span>Clasificación</span></a></div>
+    <div class="nav-item <?php echo CONTROLLER === 'catalogos' && METHOD === 'marcas_modelos' ? 'active' : ''; ?>"><a class="nav-link" href="catalogos/marcas_modelos" aria-label="Marcas y modelos" title="Marcas y modelos"><i class="fas fa-fw fa-tags" aria-hidden="true"></i><span>Marcas y modelos</span></a></div>
+    <div class="nav-item <?php echo CONTROLLER === 'catalogos' && METHOD === 'estados_uso' ? 'active' : ''; ?>"><a class="nav-link" href="catalogos/estados_uso" aria-label="Estados de uso" title="Estados de uso"><i class="fas fa-fw fa-heart-pulse" aria-hidden="true"></i><span>Estados de uso</span></a></div>
+    <div class="nav-item <?php echo CONTROLLER === 'catalogos' && METHOD === 'ubicaciones' ? 'active' : ''; ?>"><a class="nav-link" href="catalogos/ubicaciones" aria-label="Ubicaciones" title="Ubicaciones"><i class="fas fa-fw fa-location-dot" aria-hidden="true"></i><span>Ubicaciones</span></a></div>
+    <div class="nav-item <?php echo CONTROLLER === 'catalogos' && METHOD === 'unidades_admin' ? 'active' : ''; ?>"><a class="nav-link" href="catalogos/unidades_admin" aria-label="Unidades administrativas" title="Unidades administrativas"><i class="fas fa-fw fa-building" aria-hidden="true"></i><span>Unidades administrativas</span></a></div>
+    <div class="nav-item <?php echo CONTROLLER === 'catalogos' && in_array(METHOD, ['resguardantes', 'cambiar_resguardante'], true) ? 'active' : ''; ?>"><a class="nav-link" href="catalogos/resguardantes" aria-label="Resguardantes" title="Resguardantes"><i class="fas fa-fw fa-id-card-clip" aria-hidden="true"></i><span>Resguardantes</span></a></div>
+  </div>
+  <?php endif; ?>
   <hr class="sidebar-divider">
 
-  <!-- Heading -->
-  <div class="sidebar-heading">
-    Gestión
+  <?php if (can_user((string) get_user('rol'), 'admin-access')): ?><div class="sidebar-heading">Administración</div>
+  <div class="nav-item <?php echo CONTROLLER === 'admin' && METHOD === 'usuarios' ? 'active' : ''; ?>">
+    <a class="nav-link" href="admin/usuarios" aria-label="Usuarios" title="Usuarios" <?php echo CONTROLLER === 'admin' && METHOD === 'usuarios' ? 'aria-current="page"' : ''; ?>><i class="fas fa-fw fa-users" aria-hidden="true"></i><span>Usuarios<?php if (!empty($d->pending_user_count)): ?> <span class="badge text-bg-warning"><?php echo (int) $d->pending_user_count; ?> pendientes</span><?php endif; ?></span></a>
   </div>
-
-  <li class="nav-item">
-    <a class="nav-link" href="admin/usuarios">
-      <i class="fas fa-fw fa-users"></i>
-      <span>Usuarios</span>
-    </a>
-  </li>
-
-  <li class="nav-item">
-    <a class="nav-link" href="admin/productos">
-      <i class="fas fa-fw fa-tag"></i>
-      <span>Productos</span>
-    </a>
-  </li>
-
-  <!-- Divider -->
+  <div class="nav-item <?php echo CONTROLLER === 'admin' && METHOD === 'productos' ? 'active' : ''; ?>">
+    <a class="nav-link" href="admin/productos" aria-label="Productos" title="Productos" <?php echo CONTROLLER === 'admin' && METHOD === 'productos' ? 'aria-current="page"' : ''; ?>><i class="fas fa-fw fa-tag" aria-hidden="true"></i><span>Productos</span></a>
+  </div>
   <hr class="sidebar-divider">
 
-
-  <!-- Heading -->
-  <div class="sidebar-heading">
-    Addons
+  <button class="bi-nav-section" type="button" data-toggle="collapse" data-target="#legacyBeeTools" aria-controls="legacyBeeTools" aria-expanded="true" aria-label="Herramientas Bee Framework" title="Herramientas Bee Framework"><i class="fas fa-fw fa-screwdriver-wrench me-2" aria-hidden="true"></i><span class="bi-nav-label">Herramientas Bee Framework</span><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
+  <div class="collapse show" id="legacyBeeTools">
+    <div class="nav-item <?php echo CONTROLLER === 'creator' ? 'active' : ''; ?>"><a class="nav-link" href="creator" aria-label="Creator" title="Creator"><i class="fas fa-fw fa-pen" aria-hidden="true"></i><span>Creator</span></a></div>
+    <div class="nav-item <?php echo CONTROLLER === 'admin' && METHOD === 'botones' ? 'active' : ''; ?>"><a class="nav-link" href="admin/botones" aria-label="Botones" title="Botones"><i class="fas fa-fw fa-square-check" aria-hidden="true"></i><span>Botones</span></a></div>
+    <div class="nav-item <?php echo CONTROLLER === 'admin' && METHOD === 'cartas' ? 'active' : ''; ?>"><a class="nav-link" href="admin/cartas" aria-label="Tarjetas" title="Tarjetas"><i class="fas fa-fw fa-id-card" aria-hidden="true"></i><span>Tarjetas</span></a></div>
+    <div class="nav-item <?php echo CONTROLLER === 'bee' && METHOD === 'vuejs' ? 'active' : ''; ?>"><a class="nav-link" href="bee/vuejs" aria-label="Vue.js" title="Vue.js"><i class="fas fa-fw fa-code" aria-hidden="true"></i><span>Vue.js</span></a></div>
   </div>
+  <hr class="sidebar-divider">
 
-  <!-- Nav Item - Pages Collapse Menu -->
-  <li class="nav-item">
-    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePages" aria-expanded="true" aria-controls="collapsePages">
-      <i class="fas fa-fw fa-folder"></i>
-      <span>Páginas</span>
-    </a>
-    <div id="collapsePages" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
-      <div class="bg-white py-2 collapse-inner rounded">
-        <a class="collapse-item" href="login">Login</a>
-        <a class="collapse-item" href="registro">Registro</a>
-        <a class="collapse-item" href="admin/perfil">Perfil</a>
-        <a class="collapse-item" href="vuejs">Vue3</a>
-      </div>
-    </div>
-  </li>
-
-  <!-- Divider -->
-  <hr class="sidebar-divider d-none d-md-block">
-
-  <!-- Sidebar Toggler (Sidebar) -->
-  <div class="text-center d-none d-md-inline">
-    <button class="rounded-circle border-0" id="sidebarToggle"></button>
-  </div>
-
-  <!-- Sidebar Message 
-  <div class="sidebar-card d-none d-lg-flex">
-    <img class="sidebar-card-illustration mb-2" src="img/undraw_rocket.svg" alt="...">
-    <p class="text-center mb-2"><strong>SB Admin Pro</strong> is packed with premium features, components,
-      and more!</p>
-    <a class="btn btn-success btn-sm" href="https://startbootstrap.com/theme/sb-admin-pro">Upgrade to
-      Pro!</a>
-  </div>-->
-
-</ul>
-<!-- End of Sidebar -->
+  <div class="sidebar-heading">Cuenta</div>
+  <div class="nav-item <?php echo CONTROLLER === 'admin' && METHOD === 'perfil' ? 'active' : ''; ?>"><a class="nav-link" href="admin/perfil" aria-label="Perfil" title="Perfil"><i class="fas fa-fw fa-user" aria-hidden="true"></i><span>Perfil</span></a></div>
+  <?php else: ?><div class="sidebar-heading">Cuenta</div><div class="nav-item <?php echo CONTROLLER === 'admin' && METHOD === 'perfil' ? 'active' : ''; ?>"><a class="nav-link" href="admin/perfil" aria-label="Perfil" title="Perfil"><i class="fas fa-fw fa-user" aria-hidden="true"></i><span>Perfil</span></a></div><?php endif; ?>
+</nav>

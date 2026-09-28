@@ -5,11 +5,23 @@ class InventoryController extends Controller
 {
   public function __construct()
   {
-    if (!Auth::validate()) {
-      Flasher::error('Debes iniciar sesión para consultar el inventario.');
-      Redirect::to('login');
-    }
     parent::__construct();
+    $this->requirePermission('inventario-consultar');
+    $user = get_user();
+    $this->addToData('can_manage_goods', $this->hasPermission('bienes-guardar', $user));
+    $this->addToData('can_inactivate_goods', $this->hasPermission('bienes-inactivar', $user));
+    $this->addToData('can_view_catalogs', true);
+    $this->addToData('can_manage_catalogs', $this->hasPermission('catalogos-guardar', $user));
+    $this->addToData('can_inactivate_catalogs', $this->hasPermission('catalogos-inactivar', $user));
+    $this->addToData('can_delete_catalogs', $this->hasPermission('catalogos-eliminar', $user));
+    $this->addToData('can_change_custody', $this->hasPermission('bienes-inactivar', $user));
+    $this->addToData('can_access_documents', true);
+    $this->addToData('can_generate_documents', $this->hasPermission('documentos-generar', $user));
+    $this->addToData('can_admin_users', $this->hasPermission('admin-access', $user));
+    $this->addToData('can_export_reports', $this->hasPermission('reportes-exportar', $user));
+    if ((get_user('rol') ?? '') === 'admin') {
+      $this->addToData('pending_user_count', userModel::count_pending());
+    }
     $this->setEngine('twig');
     $this->addToData('csrf', (new Csrf())->get_token());
     $this->addToData('current_user', get_user());
@@ -23,26 +35,8 @@ class InventoryController extends Controller
     $this->render();
   }
 
-  protected function adminOnly(): void
-  {
-    $user = get_user();
-    if (($user['rol'] ?? 'inventario') !== 'admin') {
-      Flasher::error('No tienes autorización para administrar usuarios.');
-      Redirect::to('admin');
-    }
-  }
-
   protected function can(string $permission): void
   {
-    $user = get_user();
-    $role = $user['rol'] ?? 'inventario';
-    if ($role === 'admin') return;
-    try {
-      if ((new BeeRoleManager($role))->can($permission)) return;
-    } catch (Exception $e) {
-      // La migración crea el rol inventario; mientras tanto se limita a permisos básicos.
-    }
-    Flasher::error('No tienes permiso para realizar esta acción.');
-    Redirect::to('admin');
+    $this->requirePermission($permission);
   }
 }

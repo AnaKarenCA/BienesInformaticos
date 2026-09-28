@@ -54,6 +54,22 @@ class Redirect
   public static function back($location = '')
   {
     if (!isset($_POST['redirect_to']) && !isset($_GET['redirect_to']) && $location == '') {
+      $base = parse_url(URL);
+      $referer = parse_url($_SERVER['HTTP_REFERER'] ?? '');
+      $sameOrigin = $base && $referer
+        && strtolower((string) ($base['scheme'] ?? '')) === strtolower((string) ($referer['scheme'] ?? ''))
+        && strtolower((string) ($base['host'] ?? '')) === strtolower((string) ($referer['host'] ?? ''))
+        && (int) ($base['port'] ?? 0) === (int) ($referer['port'] ?? 0);
+      $basePath = rtrim((string) ($base['path'] ?? ''), '/') . '/';
+      $refererPath = (string) ($referer['path'] ?? '');
+      $insideApplication = $basePath === '/' || strpos($refererPath, $basePath) === 0;
+
+      if ($sameOrigin && $insideApplication) {
+        $target = $refererPath . (isset($referer['query']) ? '?' . $referer['query'] : '');
+        header('Location: ' . $target);
+        die();
+      }
+
       header('Location: ' . URL . DEFAULT_CONTROLLER);
       die();
     }

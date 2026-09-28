@@ -60,6 +60,7 @@ class ajaxController extends Controller implements ControllerInterface
    */
   function test_posts()
   {
+    $this->adminOnly();
     try {
       $posts = Model::list('pruebas');
       json_output(json_build(200, $posts));
@@ -76,6 +77,7 @@ class ajaxController extends Controller implements ControllerInterface
    */
   function test_get_post()
   {
+    $this->adminOnly();
     try {
       if (!check_posted_data(['id'], $this->data)) {
         throw new Exception('Parámetros faltantes.');
@@ -99,6 +101,7 @@ class ajaxController extends Controller implements ControllerInterface
    */
   function test_add_post()
   {
+    $this->adminOnly();
     try {
       if (!check_posted_data(['titulo','contenido','nombre'], $this->data)) {
         throw new Exception('Parámetros faltantes.');
@@ -141,6 +144,7 @@ class ajaxController extends Controller implements ControllerInterface
    */
   function test_update_post()
   {
+    $this->adminOnly();
     try {
       if (!check_posted_data(['id','titulo','contenido','nombre'], $this->data)) {
         throw new Exception('Parámetros faltantes.');
@@ -183,6 +187,7 @@ class ajaxController extends Controller implements ControllerInterface
    */
   function test_delete_post()
   {
+    $this->adminOnly();
     try {
       if (!check_posted_data(['id'], $this->data)) {
         throw new Exception('Parámetros faltantes.');

@@ -1,0 +1,70 @@
+{% include 'includes/admin/inventory-top.twig' %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4"><div><h1 class="h3 mb-1 bi-title">Todos los usuarios</h1><p class="text-muted mb-0">Consulta las cuentas y administra su estado y perfil.</p></div></div>
+<div class="mb-3"><button class="btn btn-sm bi-btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#agregarUsuarioModal"><i class="fa-solid fa-user-plus me-1" aria-hidden="true"></i>Agregar usuario</button></div>
+{% if pending_users %}<section class="card shadow-sm border-0 mb-4"><div class="card-header bg-white d-flex justify-content-between"><h2 class="h6 mb-0 bi-title">Solicitudes pendientes</h2><span class="badge text-bg-warning">{{ pending_users|length }}</span></div><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Nombre</th><th>Usuario</th><th>Correo</th><th>Fecha</th><th>Acciones</th></tr></thead><tbody>{% for pending in pending_users %}<tr><td>{{ pending.nombre|default('—') }}</td><td>{{ pending.username }}</td><td>{{ pending.email }}</td><td>{{ pending.created_at ? pending.created_at|date('d/m/Y') : '—' }}</td><td class="text-nowrap"><form class="d-inline" method="post" action="{{ get_base_url() }}admin/aprobar_usuario/{{ pending.id }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn btn-sm btn-success" type="submit" aria-label="Aprobar usuario {{ pending.username }}" title="Aprobar usuario"><i class="fa-solid fa-check" aria-hidden="true"></i></button></form> <form class="d-inline" method="post" action="{{ get_base_url() }}admin/rechazar_usuario/{{ pending.id }}" onsubmit="return confirm('¿Rechazar esta solicitud?')"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Rechazar usuario {{ pending.username }}" title="Rechazar usuario"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></form></td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+<form class="card shadow-sm border-0 mb-4" id="usuariosFilters" method="get" action="{{ get_base_url() }}admin/usuarios"><div class="card-body"><div class="row g-2 align-items-end"><div class="col-md-8"><label class="form-label" for="usuariosQ">Buscar usuario</label><input id="usuariosQ" class="form-control" name="q" value="{{ filters.q }}" placeholder="Usuario, nombre o correo"></div><div class="col-md-4"><label class="form-label" for="usuariosEstado">Estado</label><select class="form-select" id="usuariosEstado" name="estado"><option value="">Todos</option><option value="activo" {{ filters.estado == 'activo' ? 'selected' : '' }}>Activos</option><option value="inactivo" {{ filters.estado == 'inactivo' ? 'selected' : '' }}>Inactivos</option><option value="pendiente" {{ filters.estado == 'pendiente' ? 'selected' : '' }}>Pendientes</option><option value="rechazada" {{ filters.estado == 'rechazada' ? 'selected' : '' }}>Rechazados</option></select></div></div></div></form>
+<div class="small mb-2" id="usuariosFeedback" role="status" aria-live="polite"></div><section class="card shadow-sm border-0"><div class="card-header bg-white"><h2 class="h6 mb-0 bi-title">Cuentas registradas</h2></div><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Usuario</th><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead><tbody id="usersTableBody">
+{% include 'views/admin/usuarios/usuarios-rowsView.twig' with {users: users, current_user: current_user, user_roles: user_roles, csrf: csrf} %}
+</tbody></table></div><div class="card-body">{{ users.pagination|raw }}</div></section>
+<div class="modal fade" id="agregarUsuarioModal" tabindex="-1" aria-labelledby="agregarUsuarioTitulo" aria-hidden="true"><div class="modal-dialog"><form class="modal-content" method="post" action="{{ get_base_url() }}admin/post_usuarios" id="agregarUsuarioForm"><div class="modal-header"><h2 class="modal-title fs-5" id="agregarUsuarioTitulo">Agregar usuario</h2><button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button></div><div class="modal-body"><input type="hidden" name="csrf" value="{{ csrf }}"><label class="form-label" for="newUsername">Usuario</label><input class="form-control mb-3" id="newUsername" name="username" minlength="5" maxlength="20" required><label class="form-label" for="newEmail">Correo electrónico</label><input class="form-control mb-3" type="email" id="newEmail" name="email" required><label class="form-label" for="newPassword">Contraseña</label><input class="form-control" type="password" id="newPassword" name="password" required></div><div class="modal-footer"><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button><button class="btn bi-btn-primary" type="submit">Crear cuenta</button></div></form></div></div>
+<div class="modal fade" id="editarUsuarioModal" tabindex="-1" aria-labelledby="editarUsuarioTitulo" aria-hidden="true"><div class="modal-dialog"><form class="modal-content" method="post" id="editarUsuarioForm"><div class="modal-header"><h2 class="modal-title fs-5" id="editarUsuarioTitulo">Editar usuario</h2><button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button></div><div class="modal-body"><input type="hidden" name="csrf" value="{{ csrf }}"><label class="form-label" for="editNombre">Nombre</label><input class="form-control mb-3" id="editNombre" name="nombre" maxlength="150" required><label class="form-label" for="editUsername">Usuario</label><input class="form-control mb-3" id="editUsername" name="username" minlength="5" maxlength="20" required><label class="form-label" for="editEmail">Correo electrónico</label><input class="form-control mb-3" type="email" id="editEmail" name="email" required><label class="form-label" for="editRole">Rol</label><select class="form-select" id="editRole" name="rol" required>{% for role in user_roles %}<option value="{{ role.slug }}">{{ role.nombre }}</option>{% endfor %}</select><div class="small mt-3" id="editarUsuarioFeedback" role="status" aria-live="polite"></div></div><div class="modal-footer"><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal" aria-label="Cancelar edición">Cancelar</button><button class="btn bi-btn-primary" type="submit">Guardar cambios</button></div></form></div></div>
+<script>
+(() => {
+  const base = '{{ get_base_url() }}';
+  const body = document.getElementById('usersTableBody');
+  const feedback = document.getElementById('usuariosFeedback');
+  const search = document.getElementById('usuariosQ');
+  const status = document.getElementById('usuariosEstado');
+  let timer;
+  let controller;
+  async function refreshUsers() {
+    if (controller) controller.abort();
+    controller = new AbortController();
+    const params = new URLSearchParams({q: search.value, estado: status.value});
+    try {
+      const response = await fetch(base + 'admin/usuarios_ajax?' + params, {headers: {'X-Requested-With': 'XMLHttpRequest'}, signal: controller.signal});
+      if (!response.ok) throw new Error('No se pudo actualizar la lista de usuarios.');
+      const data = await response.json();
+      body.innerHTML = data.html;
+      const url = new URL(window.location.href);
+      search.value ? url.searchParams.set('q', search.value) : url.searchParams.delete('q');
+      status.value ? url.searchParams.set('estado', status.value) : url.searchParams.delete('estado');
+      history.replaceState({}, '', url);
+    } catch (error) { if (error.name !== 'AbortError') feedback.textContent = error.message; }
+  }
+  search.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(refreshUsers, 300); });
+  status.addEventListener('change', refreshUsers);
+  const createForm = document.getElementById('agregarUsuarioForm');
+  createForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!createForm.reportValidity()) return;
+    const button = createForm.querySelector('[type="submit"]'); button.disabled = true;
+    try {
+      const response = await fetch(createForm.action, {method: 'POST', body: new FormData(createForm), headers: {'X-Requested-With': 'XMLHttpRequest'}});
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.message || 'No se pudo crear el usuario.');
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('agregarUsuarioModal')).hide();
+      createForm.reset(); feedback.textContent = data.message; feedback.className = 'small mb-2 text-success'; await refreshUsers();
+    } catch (error) { feedback.textContent = error.message; feedback.className = 'small mb-2 text-danger'; }
+    finally { button.disabled = false; }
+  });
+  const editForm = document.getElementById('editarUsuarioForm');
+  const editFeedback = document.getElementById('editarUsuarioFeedback');
+  document.getElementById('editarUsuarioModal')?.addEventListener('show.bs.modal', function (event) { const button = event.relatedTarget; editForm.action = base + 'admin/actualizar_usuario/' + button.dataset.userId; document.getElementById('editNombre').value = button.dataset.userName || ''; document.getElementById('editUsername').value = button.dataset.userLogin || ''; document.getElementById('editEmail').value = button.dataset.userEmail || ''; document.getElementById('editRole').value = button.dataset.userRole || ''; editFeedback.textContent = ''; });
+  editForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!editForm.reportValidity()) return;
+    if (!window.confirm('¿Deseas guardar los cambios realizados a este usuario?')) return;
+    const button = editForm.querySelector('[type="submit"]'); button.disabled = true;
+    try {
+      const response = await fetch(editForm.action, {method: 'POST', body: new FormData(editForm), headers: {'X-Requested-With': 'XMLHttpRequest'}});
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.message || 'No se pudieron guardar los cambios.');
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('editarUsuarioModal')).hide();
+      feedback.textContent = result.message; feedback.className = 'small mb-2 text-success'; await refreshUsers();
+    } catch (error) { editFeedback.textContent = error.message; editFeedback.className = 'small mt-3 text-danger'; }
+    finally { button.disabled = false; }
+  });
+})();
+</script>
+{% include 'includes/admin/inventory-bottom.twig' %}

@@ -1,1 +1,80 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{ title }} · {{ get_sitename() }}</title><link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"><link href="{{ get_base_url() }}assets/css/main.css?v={{ get_asset_version() }}" rel="stylesheet"></head><body class="bi-login-page"><div class="bi-login-card"><header><i class="fa-solid fa-boxes-stacked"></i><h1>Bienes Informáticos</h1><p>Control de inventario patrimonial</p></header><div class="bi-login-body"><div class="bi-login-tabs"><button class="active" data-tab="login">Iniciar sesión</button><button data-tab="registro">Registro</button></div><div id="login" class="bi-auth-panel active"><form method="post" action="{{ get_base_url() }}login/post_login"><input type="hidden" name="csrf" value="{{ csrf }}"><label>Usuario</label><input name="usuario" required autocomplete="username"><label>Contraseña</label><input type="password" name="password" required autocomplete="current-password"><button class="bi-btn-primary w-100" type="submit">Ingresar</button></form></div><div id="registro" class="bi-auth-panel"><form method="post" action="{{ get_base_url() }}login/post_registro"><input type="hidden" name="csrf" value="{{ csrf }}"><label>Nombre completo</label><input name="nombre" required><label>Usuario</label><input name="usuario" required><label>Correo electrónico</label><input type="email" name="email" required><label>Teléfono</label><input name="telefono"><label>Contraseña</label><input type="password" name="password" required minlength="8"><p class="small text-muted">Los registros nuevos reciben el rol de inventario. Un administrador asigna privilegios administrativos.</p><button class="bi-btn-primary w-100" type="submit">Crear cuenta</button></form></div></div></div><script>document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-tab],.bi-auth-panel').forEach(element=>element.classList.remove('active'));button.classList.add('active');document.getElementById(button.dataset.tab).classList.add('active')}));</script></body></html>
+<!doctype html>
+<html lang="{{ get_site_lang() }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} · {{ get_sitename() }}</title>
+  {{ get_css_framework()|raw }}
+  {{ get_fontawesome()|raw }}
+  <link href="{{ get_base_url() }}assets/css/main.css?v={{ get_asset_version() }}" rel="stylesheet">
+  <link href="{{ get_base_url() }}assets/css/system-ui.css?v={{ get_asset_version() }}" rel="stylesheet">
+</head>
+<body class="bi-login-page">
+  <main class="bi-login-card">
+    <header><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i><h1>Bienes Informáticos</h1><p>Control de inventario patrimonial</p></header>
+    <div class="bi-login-body">
+      {{ flash_html|default('')|raw }}
+      <div class="bi-login-tabs" role="tablist" aria-label="Acceso y registro">
+        <button class="{{ active_tab|default('login') == 'login' ? 'active' : '' }}" id="tab-login" type="button" role="tab" aria-controls="login" aria-selected="{{ active_tab|default('login') == 'login' ? 'true' : 'false' }}" tabindex="{{ active_tab|default('login') == 'login' ? '0' : '-1' }}" data-tab="login">Iniciar sesión</button>
+        <button class="{{ active_tab|default('login') == 'registro' ? 'active' : '' }}" id="tab-registro" type="button" role="tab" aria-controls="registro" aria-selected="{{ active_tab|default('login') == 'registro' ? 'true' : 'false' }}" tabindex="{{ active_tab|default('login') == 'registro' ? '0' : '-1' }}" data-tab="registro">Registro</button>
+      </div>
+      <section id="login" class="bi-auth-panel {{ active_tab|default('login') == 'login' ? 'active' : '' }}" role="tabpanel" aria-labelledby="tab-login" tabindex="0">
+        <form method="post" action="{{ get_base_url() }}login/post_login">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <label for="loginUsuario">Usuario</label><input id="loginUsuario" name="usuario" required autocomplete="username">
+          <label for="loginPassword">Contraseña</label><input id="loginPassword" type="password" name="password" required autocomplete="current-password">
+          <button class="btn bi-btn-primary w-100" type="submit">Ingresar</button>
+        </form>
+      </section>
+      <section id="registro" class="bi-auth-panel {{ active_tab|default('login') == 'registro' ? 'active' : '' }}" role="tabpanel" aria-labelledby="tab-registro" tabindex="0">
+        <form method="post" action="{{ get_base_url() }}login/post_registro">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <label for="registroNombre">Nombre completo</label><input id="registroNombre" name="nombre" maxlength="150" required autocomplete="name">
+          <label for="registroUsuario">Usuario</label><input id="registroUsuario" name="usuario" maxlength="50" pattern="[A-Za-z0-9._-]{5,50}" required autocomplete="username">
+          <label for="registroEmail">Correo electrónico</label><input id="registroEmail" type="email" name="email" maxlength="255" required autocomplete="email">
+          <label for="registroTelefono">Teléfono</label><input id="registroTelefono" name="telefono" type="tel" maxlength="30" pattern="[0-9+() .-]{7,30}" autocomplete="tel">
+          <label for="registroPassword">Contraseña</label><input id="registroPassword" type="password" name="password" required minlength="8" autocomplete="new-password">
+          <label for="registroConfirmarPassword">Confirmar contraseña</label><input id="registroConfirmarPassword" type="password" name="confirmar_password" required minlength="8" autocomplete="new-password">
+          <p class="small text-muted mt-3">La cuenta queda pendiente hasta que un administrador autorice el acceso. Las cuentas aprobadas comienzan con acceso de consulta.</p>
+          <button class="btn bi-btn-primary w-100" type="submit">Crear cuenta</button>
+        </form>
+      </section>
+    </div>
+  </main>
+  <script>
+    (() => {
+      const tabs = [...document.querySelectorAll('[data-tab]')];
+      const activate = (tab, focus = false) => {
+        tabs.forEach(item => {
+          const selected = item === tab;
+          item.classList.toggle('active', selected);
+          item.setAttribute('aria-selected', String(selected));
+          item.tabIndex = selected ? 0 : -1;
+          document.getElementById(item.dataset.tab)?.classList.toggle('active', selected);
+        });
+        if (focus) tab.focus();
+      };
+      tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => activate(tab));
+        tab.addEventListener('keydown', event => {
+          let nextIndex = index;
+          if (event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length;
+          else if (event.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length;
+          else if (event.key === 'Home') nextIndex = 0;
+          else if (event.key === 'End') nextIndex = tabs.length - 1;
+          else return;
+          event.preventDefault();
+          activate(tabs[nextIndex], true);
+        });
+      });
+      const registrationForm = document.querySelector('#registro form');
+      const registrationPassword = document.querySelector('#registroPassword');
+      const registrationConfirmation = document.querySelector('#registroConfirmarPassword');
+      const validateConfirmation = () => registrationConfirmation.setCustomValidity(registrationConfirmation.value === registrationPassword.value ? '' : 'La confirmación de contraseña no coincide.');
+      registrationPassword.addEventListener('input', validateConfirmation);
+      registrationConfirmation.addEventListener('input', validateConfirmation);
+      registrationForm.addEventListener('submit', validateConfirmation);
+    })();
+  </script>
+</body>
+</html>

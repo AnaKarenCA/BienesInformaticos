@@ -35,6 +35,9 @@
 <!-- Custom scripts for all pages-->
 <script src="<?php echo JS . 'admin/sb-admin-2.min.js'; ?>"></script>
 
+<!-- Navegación y accesibilidad del sistema -->
+<script src="<?php echo JS . 'system-ui.js?v=' . get_asset_version(); ?>"></script>
+
 <!-- Scripts registrados manualmente -->
 <?php echo load_scripts(); ?>
 </body>

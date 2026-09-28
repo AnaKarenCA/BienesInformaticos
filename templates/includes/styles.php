@@ -23,6 +23,7 @@
 
 <!-- Estilos personalizados deben ir en main.css o abajo de esta línea -->
 <link rel="stylesheet" href="<?php echo CSS . 'main.css?v='.get_asset_version(); ?>">
+<link rel="stylesheet" href="<?php echo CSS . 'system-ui.css?v='.get_asset_version(); ?>">
 
 <!-- Estilos registrados manualmente -->
 <?php echo load_styles(); ?>

@@ -25,6 +25,7 @@ class resguardosController extends InventoryController implements ControllerInte
 
   private function documento(string $tipo, $id): void
   {
+    $this->requirePermission('inventario-consultar');
     $this->setTitle(ucfirst($tipo) . ' de resguardo');
     $bienId = $id ?: ($_GET['id'] ?? null);
     $this->renderInventory($tipo, ['tipo' => $tipo, 'bien' => $bienId ? BienModel::porId((int) $bienId) : [], 'bienes' => BienModel::buscar(['activo' => 1])]);

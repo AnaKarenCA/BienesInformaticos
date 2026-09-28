@@ -86,6 +86,70 @@ class Controller {
     }
   }
 
+  /** Rechaza sesiones sin cuenta aprobada y mantiene activo como suspensión independiente. */
+  protected function requireApprovedAccount(): array
+  {
+    if (!Auth::validate()) {
+      Flasher::error('Debes iniciar sesión para continuar.');
+      Redirect::to('login');
+    }
+
+    $userId = (int) get_user('id');
+    $user = $userId > 0 ? userModel::by_id($userId) : [];
+    if (!$user || (int) ($user['activo'] ?? 0) !== 1 || ($user['estado'] ?? 'aprobada') !== 'aprobada') {
+      $message = ($user['estado'] ?? '') === 'rechazada'
+        ? 'Tu solicitud de acceso fue rechazada. Contacta al administrador para obtener más información.'
+        : ((($user['estado'] ?? '') === 'pendiente')
+          ? 'Tu cuenta está pendiente de autorización por un administrador.'
+          : 'Tu cuenta se encuentra inactiva.');
+      BeeSession::destroy_session();
+      Auth::logout();
+      if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+      Flasher::error($message);
+      Redirect::to('login');
+    }
+
+    return $user;
+  }
+
+  /** Autorización Bee por rol y permisos, también aplicada a llamadas directas a rutas. */
+  protected function requirePermission(string $permission): void
+  {
+    $user = $this->requireApprovedAccount();
+    try {
+      if ((new BeeRoleManager((string) ($user['rol'] ?? '')))->can($permission)) return;
+    } catch (Throwable $e) {
+      // Un rol inexistente no concede acceso.
+    }
+
+    Flasher::error('No tienes permiso para realizar esta acción.');
+    Redirect::to('admin');
+  }
+
+  protected function hasPermission(string $permission, ?array $user = null): bool
+  {
+    $user = $user ?? get_user();
+    try {
+      return (new BeeRoleManager((string) ($user['rol'] ?? '')))->can($permission);
+    } catch (Throwable $e) {
+      return false;
+    }
+  }
+
+  /** Solo usuarios cuyo rol Bee concede administración pueden gestionar cuentas/roles. */
+  protected function adminOnly(): void
+  {
+    $user = $this->requireApprovedAccount();
+    try {
+      if ((new BeeRoleManager((string) ($user['rol'] ?? '')))->can('admin-access')) return;
+    } catch (Throwable $e) {
+      // Un rol inexistente no concede acceso administrativo.
+    }
+
+    Flasher::error('No tienes autorización para administrar el sistema.');
+    Redirect::to('admin');
+  }
+
   /**
    * Ejecuta la funcionalidad dependiendo del tipo de controlador
    *

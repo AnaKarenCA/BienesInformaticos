@@ -15,6 +15,7 @@ class creatorController extends Controller implements ControllerInterface
 
     // Ejecutar la funcionalidad del Controller padre
     parent::__construct();
+    $this->adminOnly();
   }
   
   function index() {

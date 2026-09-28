@@ -17,6 +17,7 @@ class beeController extends Controller implements ControllerInterface
     if (!is_local()) {
       die(get_bee_message(0));
     }
+    $this->adminOnly();
   }
 
   function index()

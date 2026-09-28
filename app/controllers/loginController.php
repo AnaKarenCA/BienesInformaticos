@@ -17,6 +17,8 @@ class loginController extends Controller implements ControllerInterface
     $this->setTitle('Ingresa a tu cuenta');
     $this->setEngine('twig');
     $this->addToData('csrf', (new Csrf())->get_token());
+    $this->addToData('flash_html', Flasher::flash());
+    $this->addToData('active_tab', ($_GET['tab'] ?? '') === 'registro' ? 'registro' : 'login');
     $this->setView('login');
     $this->render();
   }
@@ -69,13 +71,19 @@ class loginController extends Controller implements ControllerInterface
           throw new Exception('Las credenciales no son correctas.');
         }
 
-        if (isset($user['activo']) && (int) $user['activo'] !== 1) {
-          throw new Exception('Tu cuenta se encuentra inactiva.');
+        if (!password_verify($password . AUTH_SALT, $user['password'])) {
+          throw new Exception('Las credenciales no son correctas.');
         }
 
-        // Verifica el password del usuario con base al ingresado y el de la db
-        if (!password_verify($password.AUTH_SALT, $user['password'])) {
-          throw new Exception('Las credenciales no son correctas.');
+        if (($user['estado'] ?? 'aprobada') === 'pendiente') {
+          throw new Exception('Tu cuenta está pendiente de autorización por un administrador.');
+        }
+        if (($user['estado'] ?? 'aprobada') === 'rechazada') {
+          throw new Exception('Tu solicitud de acceso fue rechazada. Contacta al administrador para obtener más información.');
+        }
+
+        if (isset($user['activo']) && (int) $user['activo'] !== 1) {
+          throw new Exception('Tu cuenta se encuentra inactiva.');
         }
   
         // Sesiones totalmente persistentes con base a Cookies
@@ -93,33 +101,38 @@ class loginController extends Controller implements ControllerInterface
 
     } catch (Exception $e) {
       Flasher::error($e->getMessage());
-      Redirect::back();
+      Redirect::to('login');
     }
   }
 
   function post_registro()
   {
     try {
-      if (!Csrf::validate($_POST['csrf'] ?? '') || !check_posted_data(['nombre', 'usuario', 'email', 'password'], $_POST)) {
+      if (!Csrf::validate($_POST['csrf'] ?? '') || !check_posted_data(['nombre', 'usuario', 'email', 'password', 'confirmar_password'], $_POST)) {
         throw new Exception('Completa los datos requeridos.');
       }
       $username = sanitize_input($_POST['usuario']);
       $email = sanitize_input($_POST['email']);
       $nombre = sanitize_input($_POST['nombre']);
       $password = $_POST['password'];
+      $confirmacion = $_POST['confirmar_password'];
+      $telefono = trim((string) ($_POST['telefono'] ?? ''));
+      if ($nombre === '' || mb_strlen($nombre) > 150) throw new Exception('Ingresa tu nombre completo (máximo 150 caracteres).');
       if (!preg_match('/^[a-zA-Z0-9._-]{5,50}$/', $username)) throw new Exception('El usuario debe tener entre 5 y 50 caracteres válidos.');
       if (!filter_var($email, FILTER_VALIDATE_EMAIL)) throw new Exception('Ingresa un correo electrónico válido.');
-      if (strlen($password) < 8) throw new Exception('La contraseña debe tener al menos 8 caracteres.');
+      if (strlen($password) < 8 || !preg_match('/[a-z]/', $password) || !preg_match('/[A-Z]/', $password) || !preg_match('/\d/', $password) || !preg_match('/[^A-Za-z0-9]/', $password)) throw new Exception('La contraseña debe tener al menos 8 caracteres e incluir mayúscula, minúscula, número y símbolo.');
+      if (!hash_equals($password, $confirmacion)) throw new Exception('La confirmación de contraseña no coincide.');
+      if ($telefono !== '' && (!preg_match('/^[0-9+() .-]{7,30}$/', $telefono) || preg_match_all('/\d/', $telefono) < 7 || preg_match_all('/\d/', $telefono) > 15)) throw new Exception('Ingresa un teléfono válido de 7 a 15 dígitos.');
       if (Model::query('SELECT id FROM bee_users WHERE username = :usuario OR email = :email', ['usuario' => $username, 'email' => $email])) throw new Exception('El usuario o correo ya está registrado.');
       Model::add('bee_users', [
         'username' => $username, 'email' => $email, 'password' => password_hash($password . AUTH_SALT, PASSWORD_BCRYPT),
-        'nombre' => $nombre, 'telefono' => sanitize_input($_POST['telefono'] ?? ''), 'rol' => 'inventario', 'activo' => 1, 'created_at' => now()
+        'nombre' => $nombre, 'telefono' => sanitize_input($telefono), 'rol' => 'consultor', 'activo' => 0, 'estado' => 'pendiente', 'created_at' => now()
       ]);
-      Flasher::success('Registro realizado. Ya puedes iniciar sesión.');
-      Redirect::to('login');
+      Flasher::success('Cuenta creada correctamente. Tu solicitud está pendiente de autorización por un administrador.');
+      Redirect::to('login?tab=registro');
     } catch (Exception $e) {
       Flasher::error($e->getMessage());
-      Redirect::back();
+      Redirect::to('login?tab=registro');
     }
   }
 }
