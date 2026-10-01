@@ -1,0 +1,53 @@
+{% include 'includes/admin/inventory-top.twig' %}
+<header class="bi-list-heading"><h1 class="h3 bi-title mb-1">Activos específicos</h1><p class="text-muted mb-0">Administra los activos específicos asociados a su grupo.</p></header>
+<div class="bi-list-controls mb-4"><div class="input-group"><span class="input-group-text" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span><input class="form-control" type="search" data-global-catalog-search aria-label="Buscar activos específicos" placeholder="Buscar por genérico, grupo o activo específico"></div>{% if can_manage_catalogs|default(false) %}<button type="button" class="btn bi-btn-primary" data-bs-toggle="modal" data-bs-target="#especificoModal" title="Agregar activo específico" aria-label="Agregar activo específico"><i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Agregar activo específico</button>{% endif %}</div>
+<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Activo genérico</th><th>Grupo del activo</th><th>Activo específico</th><th>Estado</th><th>Acciones</th></tr></thead><tbody data-catalog-table>{% for item in especificos %}<tr data-catalog-row><td>{{ item.generico_nombre|title }}</td><td>{{ item.padre_nombre|title }}</td><td>{{ item.nombre|title }}</td><td><span class="badge {{ item.activo ? 'text-bg-success' : 'text-bg-secondary' }}">{{ item.activo ? 'Activo' : 'Inactivo' }}</span></td><td>{% if can_manage_catalogs|default(false) %}<button type="submit" class="btn bi-btn-primary"><i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i><span id="especificoSubmitLabel">Guardar</span></button><button type="button" class="btn btn-sm btn-outline-secondary" data-especifico-edit data-id="{{ item.id_activo_especifico }}" data-group="{{ item.id_grupo_activo }}" data-name="{{ item.nombre }}" data-bs-toggle="modal" data-bs-target="#especificoModal" title="Editar" aria-label="Editar {{ item.nombre }}"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button>{% endif %} {% if can_inactivate_catalogs|default(false) %}<a class="btn btn-sm btn-outline-{{ item.activo ? 'danger' : 'success' }}" href="{{ get_base_url() }}catalogos/cambiar_estado/especifico/{{ item.id_activo_especifico }}?_t={{ csrf }}" onclick="return confirm('{{ item.activo ? '¿Desactivar este activo específico?' : '¿Activar este activo específico?' }}')" title="{{ item.activo ? 'Desactivar' : 'Activar' }}" aria-label="{{ item.activo ? 'Desactivar' : 'Activar' }} {{ item.nombre }}"><i class="fa-solid {{ item.activo ? 'fa-toggle-off' : 'fa-toggle-on' }}" aria-hidden="true"></i></a>{% endif %}</td></tr>{% else %}<tr data-catalog-no-records><td colspan="5" class="text-center text-muted">Sin registros.</td></tr>{% endfor %}<tr class="d-none" data-search-empty><td colspan="5" class="text-center text-muted">Sin coincidencias.</td></tr></tbody></table></div></div>
+<div class="modal fade" id="especificoModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><form method="post" action="{{ get_base_url() }}catalogos/guardar/especifico" id="especificoCatalogoForm"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="id_activo_generico" id="especificoGenericoId"><div class="modal-header"><h2 class="modal-title fs-5" id="especificoModalTitle">Agregar activo específico</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div><div class="modal-body"><label class="form-label" for="especificoGenerico">Activo genérico</label><select class="form-select mb-3" id="especificoGenerico" required><option value="">Seleccionar...</option>{% for item in genericos %}<option value="{{ item.id_activo_generico }}" data-activo="{{ item.activo }}">{{ item.nombre|title }}{% if not item.activo %} (Inactivo){% endif %}</option>{% endfor %}</select><label class="form-label" for="especificoGrupo">Grupo del activo</label><select class="form-select mb-3" name="id_grupo_activo" id="especificoGrupo" required disabled><option value="">Seleccione primero un Activo Genérico</option>{% for item in grupos %}<option value="{{ item.id_grupo_activo }}" data-generico="{{ item.id_activo_generico }}" data-activo="{{ item.activo }}">{{ item.nombre|title }}{% if not item.activo %} (Inactivo){% endif %}</option>{% endfor %}</select><label class="form-label" for="especificoNombre">Nombre</label><input class="form-control" id="especificoNombre" name="nombre" maxlength="150" required></div><div class="modal-footer"><button type="submit" class="btn bi-btn-primary bi-modal-save"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i><span id="especificoSubmitLabel">Guardar</span></button><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button></div></form></div></div></div>
+<select id="gruposEspecificosData" class="d-none">{% for item in grupos %}<option value="{{ item.id_grupo_activo }}" data-generico="{{ item.id_activo_generico }}" data-activo="{{ item.activo }}">{{ item.nombre|title }}</option>{% endfor %}</select>
+<script>
+(() => {
+  const form = document.querySelector('#especificoCatalogoForm');
+  if (!form) return;
+  const generico = document.querySelector('#especificoGenerico');
+  const genericoId = document.querySelector('#especificoGenericoId');
+  const grupo = document.querySelector('#especificoGrupo');
+  const allGroups = [...document.querySelector('#gruposEspecificosData').options].map(option => option.cloneNode(true));
+  const loadGroups = selected => {
+    grupo.replaceChildren(new Option('Seleccionar...', ''));
+    allGroups.filter(option => option.dataset.generico === generico.value).forEach(option => {
+      const clone = option.cloneNode(true);
+      const editing = form.dataset.editing === '1' && clone.value === selected;
+      clone.disabled = clone.dataset.activo !== '1' && !editing;
+      grupo.add(clone);
+    });
+    if (selected && [...grupo.options].some(option => option.value === selected)) grupo.value = selected;
+    grupo.disabled = !generico.value;
+    grupo.options[0].textContent = generico.value ? 'Seleccionar...' : 'Seleccione primero un Activo Genérico';
+    genericoId.value = generico.value;
+  };
+  generico.addEventListener('change', () => loadGroups(''));
+  document.addEventListener('show.bs.modal', event => {
+    if (event.target.id !== 'especificoModal') return;
+    const button = event.relatedTarget;
+    if (button?.hasAttribute('data-especifico-edit')) {
+      form.dataset.editing = '1';
+      form.action = `{{ get_base_url() }}catalogos/guardar/especifico/${button.dataset.id}`;
+      const selected = allGroups.find(option => option.value === button.dataset.group);
+      generico.value = selected?.dataset.generico || '';
+      [...generico.options].forEach(option => { option.disabled = option.value !== '' && option.dataset.activo !== '1' && option.value !== generico.value; });
+      loadGroups(button.dataset.group);
+      document.querySelector('#especificoNombre').value = button.dataset.name;
+      document.querySelector('#especificoModalTitle').textContent = 'Editar activo específico';
+      document.querySelector('#especificoSubmitLabel').textContent = 'Actualizar';
+      return;
+    }
+    form.reset(); form.dataset.editing = '0'; form.action = `{{ get_base_url() }}catalogos/guardar/especifico`;
+    [...generico.options].forEach(option => { option.disabled = option.value !== '' && option.dataset.activo !== '1'; });
+    grupo.replaceChildren(new Option('Seleccione primero un Activo Genérico', ''));
+    grupo.disabled = true; genericoId.value = '';
+    document.querySelector('#especificoModalTitle').textContent = 'Agregar activo específico';
+    document.querySelector('#especificoSubmitLabel').textContent = 'Guardar';
+  });
+})();
+</script>
+{% include 'includes/admin/inventory-bottom.twig' %}

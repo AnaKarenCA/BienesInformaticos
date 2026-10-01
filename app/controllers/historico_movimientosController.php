@@ -4,6 +4,7 @@ class historico_movimientosController extends InventoryController implements Con
 {
   public function index()
   {
+    $this->requirePermission('movimientos-consultar');
     $this->setTitle('Histórico de movimientos');
     $filtros = [
       'q' => trim((string) ($_GET['q'] ?? '')),
@@ -28,6 +29,7 @@ class historico_movimientosController extends InventoryController implements Con
 
   public function detalle($id = null)
   {
+    $this->requirePermission('movimientos-consultar');
     $movimiento = ResguardoModel::movimientoPorId((int) $id);
     if (!$movimiento) { Flasher::error('El movimiento solicitado no existe.'); Redirect::to('historico-movimientos'); }
     $movimiento['resumen_cambio'] = $this->resumenCambio($movimiento);

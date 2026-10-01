@@ -15,8 +15,7 @@ class reportesController extends InventoryController implements ControllerInterf
 
   public function documento($tipo = 'tarjeta', $id = null)
   {
-    $this->can('inventario-consultar');
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') $this->can('documentos-generar');
+    $this->can('documentos-generar');
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && !Csrf::validate($_POST['csrf'] ?? '')) {
       Flasher::error(get_bee_message(0));
       Redirect::to('resguardos/' . ($tipo === 'resguardo' ? 'resguardo_equipo' : ($tipo === 'baja' ? 'baja_resguardante' : 'tarjeta')) . '/' . (int) $id);
@@ -28,7 +27,7 @@ class reportesController extends InventoryController implements ControllerInterf
     $observaciones = trim($_POST['observaciones'] ?? '');
     if ($tipo === 'baja' && ($_POST['confirmar_baja'] ?? '') === '1') {
       try {
-        $this->can('bienes-inactivar');
+        $this->can('bienes-desactivar');
         ResguardoModel::darDeBaja((int) $id, $_POST['fecha_baja'] ?? date('Y-m-d'), trim($_POST['motivo'] ?? ''), $observaciones, get_user() ?: null);
       } catch (Exception $e) {
         Flasher::error($e->getMessage());

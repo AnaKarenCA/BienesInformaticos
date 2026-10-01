@@ -4,6 +4,7 @@ class resguardosController extends InventoryController implements ControllerInte
 {
   public function index()
   {
+    $this->requirePermission('resguardos-consultar');
     $this->setTitle('Resguardos');
     $resguardantes = ResguardoModel::resumenResguardantes();
     $this->renderInventory('index', ['resguardantes' => $resguardantes]);
@@ -11,6 +12,7 @@ class resguardosController extends InventoryController implements ControllerInte
 
   public function detalle($id = null)
   {
+    $this->requirePermission('resguardos-consultar');
     $detalle = ResguardoModel::detalleResguardante((int) $id);
     if (!$detalle) { Flasher::error('El resguardante solicitado no existe.'); Redirect::to('resguardos'); }
     $detalle['bienes_asignados'] = count(array_filter($detalle['asignaciones'], static fn($a) => (int) $a['activo'] === 1));
@@ -25,7 +27,7 @@ class resguardosController extends InventoryController implements ControllerInte
 
   private function documento(string $tipo, $id): void
   {
-    $this->requirePermission('inventario-consultar');
+    $this->requirePermission('documentos-consultar');
     $this->setTitle(ucfirst($tipo) . ' de resguardo');
     $bienId = $id ?: ($_GET['id'] ?? null);
     $this->renderInventory($tipo, ['tipo' => $tipo, 'bien' => $bienId ? BienModel::porId((int) $bienId) : [], 'bienes' => BienModel::buscar(['activo' => 1])]);

@@ -42,10 +42,7 @@
               </form>
               <hr>
               <div class="text-center">
-                <a class="small" href="login">¿Olvidaste tu contraseña?</a>
-              </div>
-              <div class="text-center">
-                <a class="small" href="<?php echo build_url('bee/generate-user'); ?>">Crear nueva cuenta</a>
+                <a class="small" href="#recuperar-contrasena">Recuperar contraseña</a>
               </div>
             </div>
           </div>

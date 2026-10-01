@@ -1,21 +1,21 @@
 {% include 'includes/admin/inventory-top.twig' %}
-<div class="mb-4"><h1 class="h3 bi-title mb-1">Identificar bien</h1><p class="text-muted mb-0">Escanea el código de barras o busca por cualquiera de los identificadores del bien.</p></div>
+<div class="mb-4"><h1 class="h3 bi-title mb-1">Identificar bien</h1><p class="text-muted mb-0">Escanea el código QR o busca por cualquiera de los identificadores del bien.</p></div>
 
 <form class="card shadow-sm border-0 mb-4" method="get" action="{{ get_base_url() }}identificar" id="identificarForm">
   <div class="card-body">
     <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
-      <button class="btn bi-btn-primary" type="button" id="usarCamara"><i class="fa-solid fa-camera me-2" aria-hidden="true"></i>Escanear código de barras</button>
+      <button class="btn bi-btn-primary" type="button" id="usarCamara" title="Escanear código QR" aria-label="Escanear código QR"><i class="fa-solid fa-camera" aria-hidden="true"></i></button>
       <span class="text-muted">o busca manualmente</span>
     </div>
     <div id="cameraPanel" class="d-none mb-4">
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-        <p class="mb-0" id="cameraStatus" role="status" aria-live="polite">Apunta la cámara al código de barras.</p>
-        <button class="btn btn-sm btn-outline-secondary" type="button" id="cerrarCamara">Cerrar cámara</button>
+        <p class="mb-0" id="cameraStatus" role="status" aria-live="polite">Apunta la cámara al código QR.</p>
+        <button class="btn btn-sm btn-outline-secondary" type="button" id="cerrarCamara" title="Cerrar" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
       </div>
       <video id="cameraVideo" class="w-100 rounded border" style="max-height:360px;object-fit:contain" autoplay muted playsinline aria-label="Vista de la cámara para escanear"></video>
     </div>
     <label class="form-label" for="identInput">Buscar bien</label>
-    <div class="input-group"><input class="form-control" id="identInput" name="q" value="{{ consulta|default('') }}" placeholder="Clave Interna, inventario, serie o NIC/CEA..." autocomplete="off" minlength="3" required><button class="btn btn-outline-primary" type="submit"><i class="fa-solid fa-magnifying-glass me-1" aria-hidden="true"></i>Buscar</button></div>
+    <div class="input-group"><input class="form-control" id="identInput" name="q" value="{{ consulta|default('') }}" placeholder="Clave Interna, inventario, serie o NIC/CEA..." autocomplete="off" minlength="3" required><button class="btn btn-outline-primary" type="submit" title="Buscar" aria-label="Buscar"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button></div>
     <small class="form-text">Puedes escribir cualquier dato; se permiten coincidencias parciales desde 3 caracteres.</small>
   </div>
 </form>
@@ -32,8 +32,8 @@
 <section class="card shadow-sm border-0" aria-labelledby="bienIdentificadoTitulo"><div class="card-header bg-white d-flex justify-content-between align-items-center"><strong id="bienIdentificadoTitulo">Bien identificado</strong><span class="badge {{ bien.activo ? 'text-bg-success' : 'text-bg-secondary' }}">{{ bien.activo ? 'Activo' : 'Inactivo' }}</span></div>
   <div class="card-body row g-3"><div class="col-md-8"><h2 class="h4 bi-title">{{ bien.nombre_bien|title }}</h2><div class="row g-2"><div class="col-sm-6"><small class="text-muted d-block">Clave Interna</small><strong>{{ bien.clave_interna|default('—') }}</strong></div><div class="col-sm-6"><small class="text-muted d-block">Número de inventario</small><strong>{{ bien.numero_inventario|default('—') }}</strong></div><div class="col-sm-6"><small class="text-muted d-block">Número de serie</small><strong>{{ bien.numero_serie|default('—') }}</strong></div><div class="col-sm-6"><small class="text-muted d-block">NIC/CEA</small><strong>{{ bien.nic_cea|default('—') }}</strong></div></div>
     <p class="mt-3 mb-0"><strong>{{ bien.marca_nombre|default('—')|upper }}</strong>{% if bien.modelo_nombre %}<span class="text-muted"> · {{ bien.modelo_nombre }}</span>{% endif %}</p>
-    <div class="bi-detail-grid mt-3"><div><small>Unidad administrativa</small><strong class="d-block">{{ bien.unidad_nombre|default('Sin unidad registrada')|title }}</strong><small>{{ bien.codigo_ua|default('Sin código UA') }}</small></div><div><small>Resguardante</small>{% if bien.resguardante_nombre %}<strong class="d-block">{{ bien.resguardante_csp|default('CSP no capturado') }}</strong><small>{{ bien.resguardante_nombre|title }}</small>{% else %}<strong class="d-block">Sin asignar</strong>{% endif %}</div><div><small>Estado de uso</small><strong class="d-block">{{ bien.estado_nombre|default('—')|title }}</strong></div><div><small>Ubicación</small><strong class="d-block">{{ bien.ubicacion_fisica|default(bien.localidad|default('—'))|title }}</strong><small>{{ bien.municipio|default('')|title }}</small></div><div><small>Código de barras</small><strong class="d-block">{{ bien.codigo_barra|default('—') }}</strong></div></div>
-  </div></div><div class="card-footer bg-white"><a class="btn bi-btn-primary" href="{{ get_base_url() }}bienes/detalle/{{ bien.id_bien }}"><i class="fa-solid fa-eye me-1" aria-hidden="true"></i>Ver detalle completo</a></div>
+    <div class="bi-detail-grid mt-3"><div><small>Unidad administrativa</small><strong class="d-block">{{ bien.unidad_nombre|default('Sin unidad registrada')|title }}</strong><small>{{ bien.codigo_ua|default('Sin código UA') }}</small></div><div><small>Resguardante</small>{% if bien.resguardante_nombre %}<strong class="d-block">{{ bien.resguardante_csp|default('CSP no capturado') }}</strong><small>{{ bien.resguardante_nombre|title }}</small>{% else %}<strong class="d-block">Sin asignar</strong>{% endif %}</div><div><small>Estado de uso</small><strong class="d-block">{{ bien.estado_nombre|default('—')|title }}</strong></div><div><small>Ubicación</small><strong class="d-block">{{ bien.ubicacion_fisica|default(bien.localidad|default('—'))|title }}</strong><small>{{ bien.municipio|default('')|title }}</small></div><div><small>Clave interna del QR</small><strong class="d-block">{{ bien.clave_interna|default('—') }}</strong></div></div>
+  </div></div><div class="card-footer bg-white"><a class="btn bi-btn-primary" href="{{ get_base_url() }}bienes/detalle/{{ bien.id_bien }}" title="Ver" aria-label="Ver"><i class="fa-solid fa-eye" aria-hidden="true"></i></a></div>
 </section>
 {% endif %}
 {% include 'includes/admin/inventory-bottom.twig' %}

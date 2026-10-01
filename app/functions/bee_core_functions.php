@@ -2081,6 +2081,19 @@ function bee_die(string $error, $headers = [])
  */
 function bee_db_die(string $error)
 {
+	// El formulario de contraseña solicita un error JSON genérico si la conexión falla,
+	// incluso cuando el fallo ocurre antes de llegar al controlador. No exponer detalles técnicos.
+	if (($_SERVER['HTTP_X_BI_PROFILE_PASSWORD_REQUEST'] ?? '') === '1' && ($_POST['section'] ?? '') === 'password') {
+		http_response_code(500);
+		header('Content-Type: application/json; charset=utf-8');
+		echo json_encode([
+			'success' => false,
+			'code' => 'system_error',
+			'message' => 'No se pudo cambiar la contraseña debido a un error del sistema.'
+		]);
+		die();
+	}
+
 	header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 	header("Cache-Control: post-check=0, pre-check=0", false);
 	header("Pragma: no-cache");

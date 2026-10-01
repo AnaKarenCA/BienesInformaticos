@@ -1,0 +1,16 @@
+{% include 'includes/admin/inventory-top.twig' %}
+<div class="d-flex justify-content-between align-items-center mb-4 no-print">
+  <div><h1 class="h3 mb-1 bi-title">Código QR del bien</h1><p class="text-muted mb-0">{{ bien.nombre_bien }}</p></div>
+  <div class="d-flex gap-2"><a class="btn btn-outline-secondary" href="{{ get_base_url() }}bienes/detalle/{{ bien.id_bien }}" title="Regresar" aria-label="Regresar"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></a>{% if can_print_goods|default(false) %}<button class="btn bi-btn-primary" type="button" onclick="window.print()" title="Imprimir" aria-label="Imprimir"><i class="fa-solid fa-print" aria-hidden="true"></i></button>{% endif %}</div>
+</div>
+<section class="card shadow-sm border-0 qr-label mx-auto"><div class="card-body text-center p-4">
+  <p class="mb-1 fw-semibold">{{ bien.nombre_bien }}</p>
+  <img class="bi-qr-image" src="{{ codigo_qr.data_uri }}" alt="Código QR de la clave interna {{ bien.clave_interna }}">
+  <strong class="d-block mt-2 qr-value">{{ codigo_qr.codigo }}</strong>
+  <small class="text-muted">Clave interna · Control Interno: {{ bien.numero_inventario|default('—') }}</small>
+</div></section>
+<style>
+  .qr-label { max-width: 28rem; }
+  @media print { .no-print, .bi-sidebar, .topbar, nav, footer { display: none !important; } .card { border: 0 !important; box-shadow: none !important; } body { background: #fff !important; } }
+</style>
+{% include 'includes/admin/inventory-bottom.twig' %}

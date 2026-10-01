@@ -144,6 +144,19 @@ class Db
         $link->rollBack();
       }
 
+      // La carga de la sesión puede consultar la BD antes del controlador de perfil.
+      // En esa petición concreta, devolver el error técnico impediría mostrar la alerta genérica.
+      if (($_SERVER['HTTP_X_BI_PROFILE_PASSWORD_REQUEST'] ?? '') === '1' && ($_POST['section'] ?? '') === 'password') {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+          'success' => false,
+          'code' => 'system_error',
+          'message' => 'No se pudo cambiar la contraseña debido a un error del sistema.'
+        ]);
+        exit;
+      }
+
       throw new PDOException($e->getMessage());
     }
   }

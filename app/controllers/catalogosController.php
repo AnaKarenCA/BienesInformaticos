@@ -10,6 +10,7 @@ class catalogosController extends InventoryController implements ControllerInter
   public function index() { $this->clasificacion(); }
   public function clasificacion()
   {
+    $this->can('catalogos-consultar');
     $this->setTitle('Clasificación de activos');
     $genericos = CatalogoModel::administrar('generico');
     $grupos = CatalogoModel::administrar('grupo');
@@ -33,15 +34,32 @@ class catalogosController extends InventoryController implements ControllerInter
       'busqueda' => (string) ($_GET['q'] ?? '')
     ]);
   }
-  public function marcas_modelos() { $this->setTitle('Marcas y modelos'); $this->renderInventory('marcas-modelos', ['marcas' => CatalogoModel::administrar('marca'), 'modelos' => CatalogoModel::administrar('modelo'), 'busqueda' => (string) ($_GET['q'] ?? '')]); }
+  public function marcas_modelos() { $this->can('catalogos-consultar'); $this->setTitle('Marcas y modelos'); $this->renderInventory('marcas-modelos', ['marcas' => CatalogoModel::administrar('marca'), 'modelos' => CatalogoModel::administrar('modelo'), 'busqueda' => (string) ($_GET['q'] ?? '')]); }
   public function marca_modelo() { $this->marcas_modelos(); }
-  public function estados_uso() { $this->setTitle('Estados de uso'); $this->renderInventory('estados-uso', ['estados' => CatalogoModel::administrar('estado')]); }
-  public function ubicaciones() { $this->setTitle('Ubicaciones'); $this->renderInventory('ubicaciones', ['ubicaciones' => CatalogoModel::administrar('ubicacion')]); }
-  public function unidades_admin() { $this->setTitle('Unidades administrativas'); $this->renderInventory('unidades-admin', ['unidades' => CatalogoModel::unidadesAdministrativas(), 'unidades_para_padre' => CatalogoModel::unidades()]); }
+  public function colores() { $this->catalogoNombre('color', 'Colores', 'id_color'); }
+  public function materiales() { $this->catalogoNombre('material', 'Materiales', 'id_material'); }
+  private function catalogoNombre(string $tipo, string $titulo, string $idField): void
+  {
+    $this->can('catalogos-consultar');
+    $this->setTitle($titulo);
+    $this->renderInventory('catalogo-simple', [
+      'tipo' => $tipo, 'titulo' => $titulo, 'id_field' => $idField,
+      'registros' => CatalogoModel::administrar($tipo)
+    ]);
+  }
+  public function especificos()
+  {
+    $this->clasificacion();
+  }
+  public function estados_uso() { $this->can('catalogos-consultar'); $this->setTitle('Estados de uso'); $this->renderInventory('estados-uso', ['estados' => CatalogoModel::administrar('estado')]); }
+  public function ubicaciones() { $this->can('catalogos-consultar'); $this->setTitle('Ubicaciones'); $this->renderInventory('ubicaciones', ['ubicaciones' => CatalogoModel::administrar('ubicacion')]); }
+  public function unidades_admin() { $this->can('catalogos-consultar'); $this->setTitle('Unidades administrativas'); $this->renderInventory('unidades-admin', ['unidades' => CatalogoModel::unidadesAdministrativas(), 'unidades_para_padre' => CatalogoModel::unidades()]); }
+  public function unidades() { $this->unidades_admin(); }
   public function resguardantes()
   {
+    $this->can('catalogos-consultar');
     $this->setTitle('Catálogo de resguardantes');
-    $resguardantes = ResguardanteModel::listar((string) ($_GET['q'] ?? ''));
+    $resguardantes = ResguardanteModel::listar('');
     $this->renderInventory('resguardantes', [
       'resguardantes' => $resguardantes,
       'unidades' => CatalogoModel::unidades(), 'busqueda' => (string) ($_GET['q'] ?? '')
@@ -50,7 +68,8 @@ class catalogosController extends InventoryController implements ControllerInter
 
   public function cambiar_resguardante($id = null)
   {
-    $this->can('bienes-inactivar');
+    $this->can('catalogos-actualizar');
+    $this->can('catalogos-desactivar');
     $anteriorId = (int) $id;
     $actual = ResguardanteModel::porId($anteriorId);
     if (!$actual) { Flasher::error('El resguardante solicitado no existe.'); Redirect::to('catalogos/resguardantes'); }
@@ -79,7 +98,8 @@ class catalogosController extends InventoryController implements ControllerInter
   {
     $esJson = ($_POST['respuesta'] ?? '') === 'json';
     try {
-      $this->can('catalogos-guardar');
+      $isUpdate = !empty($id) || ($tipo === 'resguardante' && !empty($_POST['id_resguardante']));
+      $this->can($isUpdate ? 'catalogos-actualizar' : 'catalogos-crear');
       if (!Csrf::validate($_POST['csrf'] ?? '')) throw new Exception(get_bee_message(0));
       if ($tipo === 'resguardante') {
         $resguardanteId = $id ? (int) $id : (!empty($_POST['id_resguardante']) ? (int) $_POST['id_resguardante'] : null);
@@ -91,11 +111,38 @@ class catalogosController extends InventoryController implements ControllerInter
           return;
         }
       } else {
-        CatalogoModel::guardar((string) $tipo, $_POST, $id ? (int) $id : null);
+        $catalogoId = CatalogoModel::guardar((string) $tipo, $_POST, $id ? (int) $id : null);
+        if ($esJson) {
+          header('Content-Type: application/json; charset=utf-8');
+          echo json_encode(['ok' => true, 'registro' => CatalogoModel::porId((string) $tipo, $catalogoId)], JSON_UNESCAPED_UNICODE);
+          return;
+        }
       }
       Flasher::success('Catálogo actualizado correctamente.');
     } catch (Exception $e) {
       if ($esJson) {
+        try { $duplicado = CatalogoModel::encontrarDuplicado((string) $tipo, $_POST); }
+        catch (Throwable $lookupError) { $duplicado = []; }
+        if ($duplicado && (str_contains($e->getMessage(), 'Ya existe') || str_contains($e->getMessage(), 'ya existe'))) {
+          $nombre = (string) ($duplicado['nombre'] ?? '');
+          if (array_key_exists('activo', $duplicado) && !(int) $duplicado['activo']) {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => "El registro \"{$nombre}\" ya existe, pero está inactivo. Actívalo desde Catálogos para poder seleccionarlo."], JSON_UNESCAPED_UNICODE);
+            return;
+          }
+          $mensaje = match ($tipo) {
+            'generico' => "El Activo Genérico \"{$nombre}\" ya existe. Se seleccionó el registro existente.",
+            'grupo' => "El Grupo del Activo \"{$nombre}\" ya existe para ese Activo Genérico. Se seleccionó el registro existente.",
+            'especifico' => "El Activo Específico \"{$nombre}\" ya existe en este Grupo del Activo. Se seleccionó el registro existente.",
+            'color' => "El color \"{$nombre}\" ya existe. Se seleccionó el registro existente.",
+            'material' => "El material \"{$nombre}\" ya existe. Se seleccionó el registro existente.",
+            default => 'Ese valor ya existía; se seleccionó el registro existente.'
+          };
+          header('Content-Type: application/json; charset=utf-8');
+          echo json_encode(['ok' => true, 'duplicado' => true, 'registro' => $duplicado, 'mensaje' => $mensaje], JSON_UNESCAPED_UNICODE);
+          return;
+        }
         http_response_code(422);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['ok' => false, 'error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
@@ -109,8 +156,10 @@ class catalogosController extends InventoryController implements ControllerInter
   public function cambiar_estado($tipo = null, $id = null)
   {
     try {
-      $this->can('catalogos-inactivar');
       if (!Csrf::validate($_GET['_t'] ?? '')) throw new Exception(get_bee_message(0));
+      $registro = $tipo === 'resguardante' ? ResguardanteModel::porId((int) $id) : CatalogoModel::porId((string) $tipo, (int) $id);
+      if (!$registro) throw new Exception('El registro solicitado no existe.');
+      $this->can((int) ($registro['activo'] ?? 0) === 1 ? 'catalogos-desactivar' : 'catalogos-activar');
       if ($tipo === 'resguardante') ResguardanteModel::cambiarEstado((int) $id);
       else CatalogoModel::cambiarEstado((string) $tipo, (int) $id);
       Flasher::success('Estado del catálogo actualizado.');
@@ -118,15 +167,4 @@ class catalogosController extends InventoryController implements ControllerInter
     Redirect::back();
   }
 
-  public function eliminar_unidad($id = null)
-  {
-    try {
-      $this->can('catalogos-eliminar');
-      if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('La solicitud de eliminación no es válida.');
-      if (!Csrf::validate($_POST['csrf'] ?? '')) throw new Exception(get_bee_message(0));
-      CatalogoModel::eliminarUnidadSiNoTieneDependencias((int) $id);
-      Flasher::success('La unidad administrativa se eliminó porque no tiene registros relacionados.');
-    } catch (Exception $e) { Flasher::error($e->getMessage()); }
-    Redirect::back();
-  }
 }

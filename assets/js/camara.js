@@ -25,20 +25,20 @@
   button.addEventListener('click', async () => {
     panel?.classList.remove('d-none');
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-      status.textContent = 'La cámara no está disponible en este contexto. Puedes buscar el código manualmente.';
+      status.textContent = 'La cámara no está disponible en este contexto. Puedes buscar la clave interna manualmente.';
       return;
     }
     if (!('BarcodeDetector' in window)) {
-      status.textContent = 'Este navegador no admite lectura de códigos de barras por cámara. La búsqueda manual sigue disponible.';
+      status.textContent = 'Este navegador no admite lectura de códigos QR por cámara. La búsqueda manual sigue disponible.';
       return;
     }
 
     try {
       const disponibles = typeof BarcodeDetector.getSupportedFormats === 'function'
         ? await BarcodeDetector.getSupportedFormats()
-        : ['code_128'];
-      if (!disponibles.includes('code_128')) {
-        status.textContent = 'Este navegador no admite el formato del código de barras del sistema (Code 128). Usa la búsqueda manual.';
+        : ['qr_code'];
+      if (!disponibles.includes('qr_code')) {
+        status.textContent = 'Este navegador no admite lectura de códigos QR. Usa la búsqueda manual.';
         return;
       }
 
@@ -46,9 +46,9 @@
       stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
       video.srcObject = stream;
       await video.play();
-      const detector = new BarcodeDetector({ formats: ['code_128'] });
+      const detector = new BarcodeDetector({ formats: ['qr_code'] });
       active = true;
-      status.textContent = 'Apunta la cámara al código de barras.';
+      status.textContent = 'Apunta la cámara al código QR.';
 
       const scan = async () => {
         if (!active || !stream) return;

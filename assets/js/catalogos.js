@@ -3,11 +3,39 @@
   const search = document.querySelector('[data-global-catalog-search]');
   const groupPane = document.querySelector('[data-catalog-child-pane="grupos"]');
   const specificPane = document.querySelector('[data-catalog-child-pane="especificos"]');
+  const breadcrumb = document.querySelector('[data-catalog-breadcrumb]');
   const lists = [...document.querySelectorAll('[data-catalog-list]')];
   let selectedGenericId = '';
   let selectedGenericName = '';
   let selectedGroupId = '';
   let selectedGroupName = '';
+
+  const renderBreadcrumb = () => {
+    if (!breadcrumb) return;
+    breadcrumb.replaceChildren();
+    const addCrumb = (label, {current = false, action = '', ariaLabel = ''} = {}) => {
+      const item = document.createElement('li');
+      item.className = `breadcrumb-item${current ? ' active' : ''}`;
+      if (current) {
+        const text = document.createElement('span');
+        text.textContent = label;
+        text.setAttribute('aria-current', 'page');
+        item.append(text);
+      } else {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset[action] = '';
+        button.textContent = label;
+        if (ariaLabel) button.setAttribute('aria-label', ariaLabel);
+        item.append(button);
+      }
+      breadcrumb.append(item);
+    };
+    const hasSelection = !!selectedGenericId;
+    addCrumb('Clasificación', {current: !hasSelection, action: 'catalogBreadcrumbHome', ariaLabel: 'Volver a Clasificación'});
+    if (hasSelection) addCrumb(selectedGenericName, {current: !selectedGroupId, action: 'catalogBreadcrumbGeneric', ariaLabel: `Volver a ${selectedGenericName}`});
+    if (selectedGroupId) addCrumb(selectedGroupName, {current: true});
+  };
 
   const applyCatalogView = () => {
     const term = normalizar(search?.value.trim());
@@ -26,6 +54,7 @@
     }
     groupPane.hidden = !term && !selectedGenericId;
     specificPane.hidden = !term && !selectedGroupId;
+    renderBreadcrumb();
     groupPane.querySelector('[data-catalog-parent-label]').textContent = selectedGenericName || 'Selecciona un activo genérico';
     specificPane.querySelector('[data-catalog-parent-label]').textContent = selectedGroupName || 'Selecciona un grupo de activo';
     groupPane.querySelector('[data-catalog-selection-prompt]').hidden = !!term || !!selectedGenericId;
@@ -46,15 +75,32 @@
       });
       const noRecords = list.querySelector('[data-catalog-no-records]');
       const searchEmpty = list.querySelector('[data-search-empty]');
+      const relationEmpty = list.querySelector('[data-catalog-relation-empty]');
       const relevantLevel = level === 'generico' || level === 'grupo' && selectedGenericId || level === 'especifico' && selectedGroupId;
       noRecords?.classList.toggle('d-none', !!term || rows.length > 0 || !relevantLevel);
       searchEmpty?.classList.toggle('d-none', !term || visibleRows > 0);
+      relationEmpty?.classList.toggle('d-none', !!term || !relevantLevel || rows.length === 0 || visibleRows > 0);
     });
   };
 
   search?.addEventListener('input', () => applyCatalogView());
 
   document.addEventListener('click', event => {
+    const homeCrumb = event.target.closest('[data-catalog-breadcrumb-home]');
+    if (homeCrumb) {
+      selectedGenericId = selectedGenericName = selectedGroupId = selectedGroupName = '';
+      document.querySelectorAll('[data-catalog-select-generico], [data-catalog-select-grupo]').forEach(button => button.setAttribute('aria-pressed', 'false'));
+      applyCatalogView();
+      return;
+    }
+    const genericCrumb = event.target.closest('[data-catalog-breadcrumb-generic]');
+    if (genericCrumb) {
+      selectedGroupId = selectedGroupName = '';
+      document.querySelectorAll('[data-catalog-select-grupo]').forEach(button => button.setAttribute('aria-pressed', 'false'));
+      document.querySelectorAll('[data-catalog-select-generico]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.catalogSelectGenerico === selectedGenericId)));
+      applyCatalogView();
+      return;
+    }
     const genericButton = event.target.closest('[data-catalog-select-generico]');
     if (genericButton) {
       selectedGenericId = genericButton.dataset.catalogSelectGenerico;
@@ -70,7 +116,7 @@
     const groupButton = event.target.closest('[data-catalog-select-grupo]');
     if (groupButton) {
       selectedGenericId = groupButton.dataset.parent;
-      selectedGenericName = groupButton.closest('[data-catalog-row]')?.querySelector('small')?.textContent.split(' · ')[0] || '';
+      selectedGenericName = groupButton.closest('[data-catalog-row]')?.dataset.parentName || '';
       selectedGroupId = groupButton.dataset.catalogSelectGrupo;
       selectedGroupName = groupButton.querySelector('strong')?.textContent.trim() || '';
       document.querySelectorAll('[data-catalog-select-generico]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.catalogSelectGenerico === selectedGenericId)));

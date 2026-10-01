@@ -50,34 +50,6 @@
   const form = document.querySelector('#bienForm');
   if (!form) return;
 
-  const generico = document.querySelector('#activoGenerico');
-  const grupo = document.querySelector('#grupoActivo');
-  const gruposData = document.querySelector('#gruposData');
-  const activosDatalist = document.querySelector('#activosEspecificos');
-  const todasLasSugerencias = activosDatalist ? [...activosDatalist.querySelectorAll('option')].map(option => option.cloneNode(true)) : [];
-  const cargarSugerencias = () => {
-    if (!activosDatalist || !grupo) return;
-    activosDatalist.replaceChildren(...todasLasSugerencias.filter(option => option.dataset.grupo === grupo.value).map(option => option.cloneNode(true)));
-  };
-  cargarSugerencias();
-  generico?.addEventListener('change', () => {
-    grupo.replaceChildren(new Option('Seleccionar...', ''));
-    [...gruposData.options].filter(option => option.dataset.generico === generico.value).forEach(option => grupo.add(new Option(option.text, option.value)));
-    document.querySelector('#activoEspecifico').value = '';
-    cargarSugerencias();
-  });
-  grupo?.addEventListener('change', cargarSugerencias);
-
-  const marca = document.querySelector('#marcaBien');
-  const modelo = document.querySelector('#modeloBien');
-  const modelosDatalist = document.querySelector('#modelosBien');
-  const todosLosModelos = modelosDatalist ? [...modelosDatalist.querySelectorAll('option')].map(option => option.cloneNode(true)) : [];
-  const cargarModelos = () => {
-    if (!modelosDatalist || !marca) return;
-    modelosDatalist.replaceChildren(...todosLosModelos.filter(option => !marca.value || option.dataset.marca === marca.value).map(option => option.cloneNode(true)));
-  };
-  marca?.addEventListener('change', cargarModelos);
-
   const unidadesConfig = document.querySelector('#unidadesConfig');
   const codigoUnidad = document.querySelector('#codigoUnidadBusqueda');
   const idUnidad = document.querySelector('#idUnidad');
@@ -125,6 +97,10 @@
   const municipioUbicacion = document.querySelector('#municipioUbicacion');
   const localidadUbicacion = document.querySelector('#localidadUbicacion');
   const localidades = localidadUbicacion ? [...localidadUbicacion.options].map(option => option.cloneNode(true)) : [];
+  document.addEventListener('bien:ubicacion-agregada', event => {
+    const option = event.detail?.option;
+    if (option && !localidades.some(item => item.value === option.value)) localidades.push(option.cloneNode(true));
+  });
   const cargarLocalidades = () => {
     if (!localidadUbicacion) return;
     const seleccionActual = localidadUbicacion.value;
@@ -135,8 +111,12 @@
   municipioUbicacion?.addEventListener('change', () => {
     cargarLocalidades();
     localidadUbicacion.value = '';
+    const addLocalidad = document.querySelector('#agregarLocalidadBtn');
+    if (addLocalidad) addLocalidad.disabled = !municipioUbicacion.value;
   });
   cargarLocalidades();
+  const addLocalidad = document.querySelector('#agregarLocalidadBtn');
+  if (addLocalidad) addLocalidad.disabled = !municipioUbicacion?.value;
 
   const hidden = document.querySelector('#componentesInput');
   const list = document.querySelector('#componentesLista');

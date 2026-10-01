@@ -23,7 +23,6 @@
             <li><a class="dropdown-item" href="documentacion">Documentación</a></li>
             <li><a class="dropdown-item" href="bee/info">Bee info</a></li>
             <li><a class="dropdown-item" href="bee/password">Generar contraseña</a></li>
-            <li><a class="dropdown-item" href="<?php echo build_url('bee/generate-user'); ?>">Crear nuevo usuario</a></li>
             <li><a class="dropdown-item" href="<?php echo build_url('bee/regenerate'); ?>">Regenerar credenciales</a></li>
             <li><a class="dropdown-item" href="https://bit.ly/cursos-gratuitos-ajs">Cursos Gratuitos</a></li>
           </ul>

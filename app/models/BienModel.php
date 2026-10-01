@@ -4,18 +4,21 @@ class BienModel extends Model
 {
   private const SELECT = "SELECT b.*, ua.codigo_ua, ua.nombre AS unidad_nombre, m.nombre AS marca_nombre,
     mo.nombre AS modelo_nombre, eu.nombre AS estado_nombre, ae.nombre AS activo_especifico_nombre,
+    COALESCE(mt.nombre, b.material) AS material_nombre, COALESCE(cl.nombre, b.color) AS color_nombre,
     ga.id_grupo_activo AS id_grupo_activo, ga.nombre AS grupo_nombre,
     ag.id_activo_generico AS id_activo_generico, ag.nombre AS activo_generico_nombre,
     r.csp AS resguardante_csp,
     CONCAT_WS(' ', r.nombre, r.apellido_paterno, NULLIF(r.apellido_materno, '')) AS resguardante_nombre,
     ub.municipio, ub.localidad, ub.ubicacion_fisica, COALESCE(rg.fecha_asignacion, b.fecha_asignacion) AS fecha_asignacion_actual,
-    cb.codigo AS codigo_barra, rg.id_resguardante, r.id_unidad AS resguardante_id_unidad,
+    cb.codigo AS codigo_qr, rg.id_resguardante, r.id_unidad AS resguardante_id_unidad,
     uar.codigo_ua AS resguardante_codigo_ua, uar.nombre AS resguardante_unidad_nombre
     FROM bien b
     INNER JOIN unidad_administrativa ua ON ua.id_unidad = b.id_unidad
     LEFT JOIN marca m ON m.id_marca = b.id_marca
     LEFT JOIN modelo mo ON mo.id_modelo = b.id_modelo AND mo.id_marca = b.id_marca
     LEFT JOIN estado_uso eu ON eu.id_estado_uso = b.id_estado_uso
+    LEFT JOIN material mt ON mt.id_material = b.id_material
+    LEFT JOIN color cl ON cl.id_color = b.id_color
     LEFT JOIN ubicacion ub ON ub.id_ubicacion = b.id_ubicacion
     LEFT JOIN activo_especifico ae ON ae.id_activo_especifico = b.id_activo_especifico
     LEFT JOIN grupo_activo ga ON ga.id_grupo_activo = ae.id_grupo_activo
@@ -113,43 +116,48 @@ class BienModel extends Model
         OR b.clave_interna LIKE :clave_interna
         OR b.numero_serie LIKE :serie
         OR b.nic_cea LIKE :nic_cea
-        OR EXISTS (SELECT 1 FROM codigo_barra cb WHERE cb.id_bien = b.id_bien AND cb.activo = 1 AND cb.codigo LIKE :codigo_barra)
+        OR EXISTS (SELECT 1 FROM codigo_barra cb WHERE cb.id_bien = b.id_bien AND cb.activo = 1 AND cb.codigo LIKE :codigo)
       ORDER BY CASE
         WHEN b.numero_inventario = :exact_inventario OR b.clave_interna = :exact_clave
           OR b.numero_serie = :exact_serie OR b.nic_cea = :exact_nic
-          OR EXISTS (SELECT 1 FROM codigo_barra cbe WHERE cbe.id_bien = b.id_bien AND cbe.activo = 1 AND cbe.codigo = :exact_barcode)
+          OR EXISTS (SELECT 1 FROM codigo_barra cbe WHERE cbe.id_bien = b.id_bien AND cbe.activo = 1 AND cbe.codigo = :exact_codigo)
         THEN 0 ELSE 1 END, b.id_bien DESC LIMIT " . max(1, min(20, $limite));
     $params = [
       'inventario' => $busqueda, 'clave_interna' => $busqueda, 'serie' => $busqueda,
-      'nic_cea' => $busqueda, 'codigo_barra' => $busqueda,
+      'nic_cea' => $busqueda, 'codigo' => $busqueda,
       'exact_inventario' => $valor, 'exact_clave' => $valor, 'exact_serie' => $valor,
-      'exact_nic' => $valor, 'exact_barcode' => $valor
+      'exact_nic' => $valor, 'exact_codigo' => $valor
     ];
     return parent::query($sql, $params) ?: [];
   }
 
-  /** Recupera el código activo o lo crea usando exclusivamente la Clave Interna. */
-  public static function codigoBarra(int $bienId): array
+  /** Recupera la Clave Interna existente y la representa como QR. */
+  public static function codigoQr(int $bienId): array
   {
     $bien = self::porId($bienId);
     if (!$bien) return [];
-    if (empty($bien['clave_interna'])) throw new Exception('El bien no cuenta con una Clave Interna para generar su código de barras.');
+    if (empty($bien['clave_interna'])) throw new Exception('El bien no cuenta con una Clave Interna para generar su código QR.');
 
-    $existente = parent::query('SELECT id_codigo_barra, codigo, activo FROM codigo_barra WHERE id_bien = :bien ORDER BY activo DESC, fecha_generacion DESC LIMIT 1', ['bien' => $bienId]);
+    $existente = parent::query('SELECT id_codigo_barra, codigo, tipo_codigo, activo FROM codigo_barra WHERE id_bien = :bien ORDER BY activo DESC, fecha_generacion DESC LIMIT 1', ['bien' => $bienId]);
     if ($existente) {
       $registro = $existente[0];
-      if ($registro['codigo'] !== $bien['clave_interna'] || !(int) $registro['activo']) {
+      if ($registro['codigo'] !== $bien['clave_interna'] || $registro['tipo_codigo'] !== 'QR' || !(int) $registro['activo']) {
         parent::update('codigo_barra', ['id_codigo_barra' => $registro['id_codigo_barra']], [
-          'codigo' => $bien['clave_interna'], 'tipo_codigo' => 'CODE128', 'activo' => 1
+          'codigo' => $bien['clave_interna'], 'tipo_codigo' => 'QR', 'activo' => 1
         ]);
       }
-      return ['codigo' => $bien['clave_interna'], 'tipo_codigo' => 'CODE128'];
+    } else {
+      parent::add('codigo_barra', [
+        'id_bien' => $bienId, 'codigo' => $bien['clave_interna'], 'tipo_codigo' => 'QR', 'activo' => 1
+      ]);
     }
 
-    parent::add('codigo_barra', [
-      'id_bien' => $bienId, 'codigo' => $bien['clave_interna'], 'tipo_codigo' => 'CODE128', 'activo' => 1
-    ]);
-    return ['codigo' => $bien['clave_interna'], 'tipo_codigo' => 'CODE128'];
+    $qrCode = \Endroid\QrCode\QrCode::create((string) $bien['clave_interna'])->setSize(320)->setMargin(16);
+    $result = (new \Endroid\QrCode\Writer\SvgWriter())->write($qrCode);
+    return [
+      'codigo' => $bien['clave_interna'], 'tipo_codigo' => 'QR',
+      'svg' => $result->getString(), 'data_uri' => $result->getDataUri()
+    ];
   }
 
   public static function siguienteCI(): string
@@ -172,16 +180,15 @@ class BienModel extends Model
 
   public static function guardar(array $datos, array $componentes = [], ?int $id = null, ?array $usuario = null): int
   {
+    self::validarCatalogosBien($datos, $id);
     $contextoAnterior = $id ? ResguardoModel::contextoBien($id) : [];
-    $datos['id_activo_especifico'] = CatalogoModel::obtenerOCrearActivoEspecifico($datos['activo_especifico_nombre'], (int) $datos['id_grupo_activo']);
-    $datos['id_modelo'] = CatalogoModel::obtenerOCrearModelo($datos['modelo_nombre'] ?? '', (int) ($datos['id_marca'] ?? 0));
-    unset($datos['activo_especifico_nombre'], $datos['id_grupo_activo'], $datos['modelo_nombre']);
+    unset($datos['id_activo_generico'], $datos['id_grupo_activo']);
     if ($id) {
       parent::update('bien', ['id_bien' => $id], $datos);
     } else {
       $datos['clave_interna'] = self::siguienteCI();
       $id = (int) parent::add('bien', $datos);
-      parent::add('codigo_barra', ['id_bien' => $id, 'codigo' => $datos['clave_interna'], 'tipo_codigo' => 'CODE128', 'activo' => 1]);
+      parent::add('codigo_barra', ['id_bien' => $id, 'codigo' => $datos['clave_interna'], 'tipo_codigo' => 'QR', 'activo' => 1]);
     }
     self::sincronizarComponentes($id, $componentes);
     $contextoNuevo = ResguardoModel::contextoBien($id);
@@ -198,6 +205,36 @@ class BienModel extends Model
       }
     }
     return $id;
+  }
+
+  /** Valida que cada selección pertenezca a la jerarquía enviada y esté activa. */
+  private static function validarCatalogosBien(array $datos, ?int $bienId): void
+  {
+    $actual = $bienId ? parent::query('SELECT * FROM bien WHERE id_bien = :id LIMIT 1', ['id' => $bienId]) : [];
+    if ($bienId && !$actual) throw new Exception('El bien solicitado no existe.');
+    $actual = $actual[0] ?? [];
+    $unidadId = (int) ($datos['id_unidad'] ?? 0);
+    if ($unidadId && !CatalogoModel::unidadActivaOActual($unidadId, (int) ($actual['id_unidad'] ?? 0))) throw new Exception('Selecciona una unidad administrativa activa.');
+    $esActivoOActual = static function (string $tabla, string $campo, int $valor, string $campoActual) use ($actual): bool {
+      if ($valor < 1) return false;
+      return (bool) parent::query("SELECT {$campo} FROM {$tabla} WHERE {$campo} = :id AND (activo = 1 OR {$campo} = :actual) LIMIT 1", ['id' => $valor, 'actual' => (int) ($actual[$campoActual] ?? 0)]);
+    };
+    $generico = (int) ($datos['id_activo_generico'] ?? 0);
+    $grupo = (int) ($datos['id_grupo_activo'] ?? 0);
+    $especifico = (int) ($datos['id_activo_especifico'] ?? 0);
+    if (!$esActivoOActual('activo_generico', 'id_activo_generico', $generico, 'id_activo_generico')) throw new Exception('Selecciona un activo genérico activo.');
+    $grupoValido = parent::query('SELECT g.id_grupo_activo FROM grupo_activo g WHERE g.id_grupo_activo = :grupo AND g.id_activo_generico = :generico AND (g.activo = 1 OR g.id_grupo_activo = :actual)', ['grupo' => $grupo, 'generico' => $generico, 'actual' => (int) ($actual['id_grupo_activo'] ?? 0)]);
+    if (!$grupoValido) throw new Exception('El grupo seleccionado no pertenece al activo genérico.');
+    $especificoValido = parent::query('SELECT e.id_activo_especifico FROM activo_especifico e WHERE e.id_activo_especifico = :especifico AND e.id_grupo_activo = :grupo AND (e.activo = 1 OR e.id_activo_especifico = :actual)', ['especifico' => $especifico, 'grupo' => $grupo, 'actual' => (int) ($actual['id_activo_especifico'] ?? 0)]);
+    if (!$especificoValido) throw new Exception('El activo específico no pertenece al grupo seleccionado.');
+    $marca = (int) ($datos['id_marca'] ?? 0); $modelo = (int) ($datos['id_modelo'] ?? 0);
+    if ($marca && !$esActivoOActual('marca', 'id_marca', $marca, 'id_marca')) throw new Exception('Selecciona una marca activa.');
+    if ($modelo && !$marca) throw new Exception('Selecciona la marca correspondiente al modelo.');
+    if ($modelo && !parent::query('SELECT id_modelo FROM modelo WHERE id_modelo = :modelo AND id_marca = :marca AND (activo = 1 OR id_modelo = :actual) LIMIT 1', ['modelo' => $modelo, 'marca' => $marca, 'actual' => (int) ($actual['id_modelo'] ?? 0)])) throw new Exception('El modelo seleccionado no pertenece a la marca elegida.');
+    foreach ([['material', 'id_material'], ['color', 'id_color'], ['estado_uso', 'id_estado_uso'], ['ubicacion', 'id_ubicacion']] as [$tabla, $campo]) {
+      $valor = (int) ($datos[$campo] ?? 0);
+      if ($valor && !$esActivoOActual($tabla, $campo, $valor, $campo)) throw new Exception('Uno de los valores de catálogo seleccionados ya no está activo. Actualiza la página e inténtalo de nuevo.');
+    }
   }
 
   private static function sincronizarComponentes(int $bienId, array $componentes): void

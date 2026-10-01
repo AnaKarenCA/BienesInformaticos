@@ -1,0 +1,227 @@
+{% include 'includes/admin/inventory-top.twig' %}
+<header class="bi-list-heading mb-4">
+  <h1 class="h3 mb-1 bi-title">Mi perfil</h1>
+  <p class="text-muted mb-0">Consulta la información de tu cuenta y administra tus datos personales.</p>
+</header>
+
+<div class="row g-4">
+  <div class="col-12 col-xl-5">
+    <section class="card shadow-sm border-0 h-100" aria-labelledby="profileIdentityHeading">
+      <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+        <h2 class="h6 mb-0 bi-title" id="profileIdentityHeading">Información de la Cuenta</h2>
+        <button class="btn btn-sm bi-button-label bi-profile-info" type="button" id="profileInfoButton" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom" data-bs-title="Información de la cuenta" data-bs-content="Estos datos de identificación no se pueden modificar desde Mi perfil. Contacta al administrador para solicitar cualquier cambio." aria-label="Información sobre los datos de la cuenta"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></button>
+      </div>
+      <div class="card-body">
+        <dl class="bi-profile-details mb-0">
+          <div><dt>Nombre</dt><dd>{{ profile_user.nombre_pila|default(profile_user.nombre|default('')) }}</dd></div>
+          <div><dt>Apellido P.</dt><dd>{{ profile_user.apellido_paterno|default('') }}</dd></div>
+          <div><dt>Apellido M.</dt><dd>{{ profile_user.apellido_materno|default('') }}</dd></div>
+          <div><dt>Usuario</dt><dd>{{ profile_user.username|default('') }}</dd></div>
+          <div><dt>Rol</dt><dd>{{ profile_user.rol_nombre|default(profile_user.rol|default('')) }}</dd></div>
+          <div><dt>Estado</dt><dd>{{ profile_user.activo|default(0) == 1 ? 'Activo' : 'Inactivo' }}</dd></div>
+          <div><dt>Fecha de Creación</dt><dd>{{ profile_user.created_at|default('')|date('d/m/Y') }}</dd></div>
+        </dl>
+      </div>
+    </section>
+  </div>
+
+  <div class="col-12 col-xl-7">
+    <section class="card shadow-sm border-0 mb-4" aria-labelledby="profileContactHeading">
+      <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between gap-2"><h2 class="h6 mb-0 bi-title" id="profileContactHeading">Datos de contacto</h2><button class="btn btn-sm btn-outline-secondary bi-profile-edit bi-button-label" type="button" data-bs-toggle="modal" data-bs-target="#profileContactModal" aria-label="Editar datos de contacto" title="Editar datos de contacto"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Editar</span></button></div>
+      <div class="card-body">
+        <dl class="bi-profile-details bi-profile-details--contact mb-0">
+          <div><dt>Correo electrónico</dt><dd><span class="bi-profile-contact-value">{{ profile_user.email|default('') is empty ? 'No registrado' : profile_user.email }}</span></dd></div>
+          <div><dt>Número de teléfono</dt><dd><span class="bi-profile-contact-value">{{ profile_user.telefono|default('') is empty ? 'No registrado' : profile_user.telefono }}</span></dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="card shadow-sm border-0" aria-labelledby="profilePasswordHeading">
+      <div class="card-header bg-white py-3"><h2 class="h6 mb-0 bi-title" id="profilePasswordHeading">Cambiar contraseña</h2></div>
+      <div class="card-body">
+        <p class="small text-muted">Para cambiar tu contraseña, confirma la actual y captura dos veces la nueva.</p>
+        <form method="post" action="{{ get_base_url() }}admin/guardar_perfil" id="profilePasswordForm" novalidate>
+          <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="section" value="password">
+          <div class="row g-3">
+            {% for field in [
+              {id: 'profileCurrentPassword', name: 'password_actual', label: 'Contraseña actual', autocomplete: 'current-password'},
+              {id: 'profileNewPassword', name: 'password_nueva', label: 'Nueva contraseña', autocomplete: 'new-password'},
+              {id: 'profileConfirmPassword', name: 'password_confirmacion', label: 'Repetir nueva contraseña', autocomplete: 'new-password'}
+            ] %}
+              <div class="col-12"><label class="form-label" for="{{ field.id }}">{{ field.label }}</label><div class="input-group bi-password-group"><input class="form-control" type="password" id="{{ field.id }}" name="{{ field.name }}" autocomplete="{{ field.autocomplete }}" {% if field.name != 'password_actual' %}minlength="5" maxlength="20"{% endif %} {% if field.name != 'password_actual' %}data-no-clipboard{% endif %} {% if field.name == 'password_actual' %}aria-describedby="profileCurrentPasswordStatus"{% endif %} required><button class="btn btn-outline-secondary bi-password-toggle bi-button-label" type="button" data-password-target="{{ field.id }}" aria-label="Mostrar {{ field.label|lower }}" title="Mostrar contraseña"><i class="fa-solid fa-eye" aria-hidden="true"></i></button></div></div>
+              {% if field.name == 'password_actual' %}<div class="col-12 pt-0"><div class="bi-current-password-status is-invalid" id="profileCurrentPasswordStatus" aria-live="polite">Ingresa tu contraseña actual. Se comprobará al guardar.</div></div>{% endif %}
+              {% if field.name == 'password_nueva' %}
+                <div class="col-12 pt-0"><ul class="bi-password-requirements" id="profilePasswordRequirements" aria-label="Requisitos de la nueva contraseña" aria-live="polite">
+                  <li data-password-rule="length" class="is-invalid">Entre 5 y 20 caracteres</li>
+                  <li data-password-rule="lowercase" class="is-invalid">Al menos una letra minúscula</li>
+                  <li data-password-rule="uppercase" class="is-invalid">Al menos una letra mayúscula</li>
+                  <li data-password-rule="number" class="is-invalid">Al menos un número</li>
+                  <li data-password-rule="symbol" class="is-invalid">Al menos un símbolo permitido: !@#$%^&amp;*_-</li>
+                  <li data-password-rule="charset" class="is-invalid">Solo letras, números y símbolos permitidos</li>
+                </ul></div>
+              {% elseif field.name == 'password_confirmacion' %}
+                <div class="col-12 pt-0"><div class="bi-password-match is-invalid" id="profilePasswordMatch" aria-live="polite">La confirmación debe coincidir con la nueva contraseña.</div></div>
+              {% endif %}
+            {% endfor %}
+            <div class="col-12"><div class="small text-danger mt-2" id="profilePasswordError" role="alert" hidden></div></div>
+            <div class="col-12"><button class="btn bi-btn-primary bi-button-label" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i><span>Guardar contraseña</span></button></div>
+          </div>
+        </form>
+        <div class="alert mb-0 mt-3" id="profilePasswordResult" role="alert" aria-live="assertive" hidden></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="modal fade" id="profileContactModal" tabindex="-1" aria-labelledby="profileContactModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered bi-profile-contact-dialog"><form class="modal-content" method="post" action="{{ get_base_url() }}admin/guardar_perfil" id="profileContactForm" novalidate>
+    <div class="modal-header"><h2 class="modal-title fs-6 bi-title" id="profileContactModalTitle">Editar datos de contacto</h2><button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+    <div class="modal-body"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="section" value="contact">
+      <div class="row g-3"><div class="col-12 col-sm-6"><label class="form-label" for="profileEmail">Correo electrónico</label><input class="form-control" type="email" id="profileEmail" name="email" value="{{ profile_user.email|default('') }}" maxlength="100" autocomplete="email" aria-describedby="profileContactError"></div>
+      <div class="col-12 col-sm-6"><label class="form-label" for="profilePhone">Número de teléfono</label><input class="form-control" type="text" id="profilePhone" name="telefono" value="{{ profile_user.telefono|default('') }}" inputmode="numeric" maxlength="15" pattern="([0-9]{7,15})?" autocomplete="tel-national" aria-describedby="profileContactError"></div></div>
+      <div class="small text-danger" id="profileContactError" role="alert" hidden></div>
+    </div>
+    <div class="modal-footer d-flex flex-nowrap gap-2"><button class="btn bi-btn-primary bi-button-label" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i><span>Guardar cambios</span></button><button class="btn btn-outline-secondary bi-button-label" type="button" data-bs-dismiss="modal"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span>Cancelar</span></button></div>
+  </form></div>
+</div>
+
+<script>
+(() => {
+  const contactForm = document.getElementById('profileContactForm');
+  const email = document.getElementById('profileEmail');
+  const phone = document.getElementById('profilePhone');
+  const contactError = document.getElementById('profileContactError');
+  phone.addEventListener('input', () => { phone.value = phone.value.replace(/\D/g, '').slice(0, 15); });
+  contactForm.addEventListener('submit', event => {
+    contactError.hidden = true;
+    if (!email.value.trim() && !phone.value.trim()) {
+      event.preventDefault();
+      contactError.textContent = 'Proporciona al menos un medio de contacto: correo electrónico o teléfono.';
+      contactError.hidden = false;
+      return;
+    }
+    if (!contactForm.reportValidity()) event.preventDefault();
+  });
+
+  document.querySelectorAll('[data-password-target]').forEach(button => {
+    button.addEventListener('click', () => {
+      const input = document.getElementById(button.dataset.passwordTarget);
+      const showing = input.type === 'password';
+      input.type = showing ? 'text' : 'password';
+      button.setAttribute('aria-label', `${showing ? 'Ocultar' : 'Mostrar'} ${input.labels[0].textContent.toLowerCase()}`);
+      button.title = showing ? 'Ocultar contraseña' : 'Mostrar contraseña';
+      button.innerHTML = `<i class="fa-solid ${showing ? 'fa-eye-slash' : 'fa-eye'}" aria-hidden="true"></i>`;
+    });
+  });
+
+  document.querySelectorAll('[data-no-clipboard]').forEach(input => {
+    ['copy', 'cut', 'paste'].forEach(eventName => input.addEventListener(eventName, event => event.preventDefault()));
+  });
+
+  const passwordForm = document.getElementById('profilePasswordForm');
+  const passwordError = document.getElementById('profilePasswordError');
+  const passwordResult = document.getElementById('profilePasswordResult');
+  const passwordSubmit = passwordForm.querySelector('[type="submit"]');
+  const currentPassword = document.getElementById('profileCurrentPassword');
+  const currentPasswordStatus = document.getElementById('profileCurrentPasswordStatus');
+  const newPassword = document.getElementById('profileNewPassword');
+  const confirmPassword = document.getElementById('profileConfirmPassword');
+  const passwordMatch = document.getElementById('profilePasswordMatch');
+  const setRule = (name, isValid) => {
+    const item = document.querySelector(`[data-password-rule="${name}"]`);
+    if (!item) return;
+    item.classList.toggle('is-valid', isValid);
+    item.classList.toggle('is-invalid', !isValid);
+    item.setAttribute('aria-label', `${isValid ? 'Cumplido' : 'No cumplido'}: ${item.textContent.trim()}`);
+  };
+  const updatePasswordRequirements = () => {
+    const value = newPassword.value;
+    setRule('length', value.length >= 5 && value.length <= 20);
+    setRule('lowercase', /[a-z]/.test(value));
+    setRule('uppercase', /[A-Z]/.test(value));
+    setRule('number', /\d/.test(value));
+    setRule('symbol', /[!@#$%^&*_\-]/.test(value));
+    setRule('charset', /^[A-Za-z\d!@#$%^&*_\-]*$/.test(value));
+    updatePasswordMatch();
+  };
+  const updatePasswordMatch = () => {
+    const hasValues = newPassword.value.length > 0 && confirmPassword.value.length > 0;
+    const matches = hasValues && newPassword.value === confirmPassword.value;
+    passwordMatch.classList.toggle('is-valid', matches);
+    passwordMatch.classList.toggle('is-invalid', !matches);
+    passwordMatch.textContent = matches ? 'La nueva contraseña coincide.' : 'La confirmación debe coincidir con la nueva contraseña.';
+  };
+  const updateCurrentPasswordStatus = () => {
+    const entered = currentPassword.value.length > 0;
+    currentPasswordStatus.classList.toggle('is-invalid', !entered);
+    currentPasswordStatus.classList.toggle('is-ready', entered);
+  currentPasswordStatus.textContent = entered
+      ? 'Se comprobará al guardar; aquí no se valida si es correcta.'
+      : 'Ingresa tu contraseña actual. Se comprobará al guardar.';
+  };
+  currentPassword.addEventListener('input', updateCurrentPasswordStatus);
+  updateCurrentPasswordStatus();
+  newPassword.addEventListener('input', updatePasswordRequirements);
+  confirmPassword.addEventListener('input', updatePasswordMatch);
+  passwordForm.addEventListener('submit', async event => {
+    passwordError.hidden = true;
+    passwordResult.hidden = true;
+    const next = newPassword.value;
+    const confirmation = confirmPassword.value;
+    if (next !== confirmation) {
+      event.preventDefault();
+      passwordError.textContent = 'La nueva contraseña y su repetición no coinciden.';
+      passwordError.hidden = false;
+      return;
+    }
+    if (!passwordForm.reportValidity()) {
+      event.preventDefault();
+      return;
+    }
+
+    event.preventDefault();
+    passwordSubmit.disabled = true;
+    try {
+      const response = await fetch(passwordForm.action, {
+        method: 'POST',
+        body: new FormData(passwordForm),
+        credentials: 'same-origin',
+        headers: {'X-Requested-With': 'XMLHttpRequest', 'X-BI-Profile-Password-Request': '1', 'Accept': 'application/json'}
+      });
+      const result = await response.json();
+      let type = 'danger';
+      let message = 'No se pudo cambiar la contraseña debido a un error del sistema.';
+      if (response.ok && result.success === true && result.code === 'success') {
+        type = 'success';
+        message = 'La contraseña se ha cambiado exitosamente.';
+        passwordForm.reset();
+        updateCurrentPasswordStatus();
+        updatePasswordRequirements();
+      } else if (result.code === 'invalid_current_password') {
+        message = 'No se pudo cambiar la contraseña porque la contraseña actual es incorrecta.';
+      } else if (result.code === 'system_error') {
+        message = 'No se pudo cambiar la contraseña debido a un error del sistema.';
+      } else if (result.code === 'validation_error' && typeof result.message === 'string') {
+        message = result.message;
+      }
+      passwordResult.className = `alert alert-${type} mb-0 mt-3`;
+      passwordResult.textContent = message;
+      passwordResult.hidden = false;
+    } catch (error) {
+      passwordResult.className = 'alert alert-danger mb-0 mt-3';
+      passwordResult.textContent = 'No se pudo cambiar la contraseña debido a un error del sistema.';
+      passwordResult.hidden = false;
+    } finally {
+      passwordSubmit.disabled = false;
+    }
+  });
+  updatePasswordRequirements();
+
+  const initializeProfilePopover = () => {
+    if (window.bootstrap?.Popover) bootstrap.Popover.getOrCreateInstance(document.getElementById('profileInfoButton'), {trigger: 'focus', container: 'body'});
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeProfilePopover, {once: true});
+  else initializeProfilePopover();
+})();
+</script>
+{% include 'includes/admin/inventory-bottom.twig' %}

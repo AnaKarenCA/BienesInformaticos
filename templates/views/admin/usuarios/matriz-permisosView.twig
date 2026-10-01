@@ -1,15 +1,16 @@
 {% include 'includes/admin/inventory-top.twig' %}
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4"><div><h1 class="h3 mb-1 bi-title">Roles y permisos</h1><p class="text-muted mb-0">Consulta el acceso a cada sección y administra las operaciones disponibles por rol.</p></div><a class="btn btn-sm btn-outline-secondary" href="{{ get_base_url() }}admin/usuarios"><i class="fa-solid fa-users me-1" aria-hidden="true"></i>Todos los usuarios</a></div>
+{% set moduleIcons = {'Inicio': 'fa-solid fa-house', 'Bienes': 'fa-solid fa-boxes-stacked', 'Catálogos': 'fa-solid fa-list-check', 'Resguardos': 'fa-solid fa-file-signature', 'Movimientos': 'fa-solid fa-arrow-right-arrow-left', 'Documentos': 'fa-solid fa-file-pdf', 'Reportes': 'fa-solid fa-chart-column', 'Administración': 'fa-solid fa-user-shield', 'Permisos sin sección asociada': 'fa-solid fa-ellipsis'} %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4"><div><h1 class="h3 mb-1 bi-title">Roles y permisos</h1><p class="text-muted mb-0">Módulo → acción → acceso por rol. Los permisos se validan y guardan en el servidor.</p></div><a class="btn btn-sm btn-outline-secondary" href="{{ get_base_url() }}admin/usuarios"><i class="fa-solid fa-users me-1" aria-hidden="true"></i>Todos los usuarios</a></div>
 <div class="small mb-3" id="matrixFeedback" role="status" aria-live="polite"></div>
-<section class="card shadow-sm border-0 bi-permission-matrix"><div class="card-header"><h2 class="h6 mb-0 bi-title">Matriz por sección del sistema</h2></div><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0" id="permissionsMatrix"><thead><tr><th scope="col" class="ps-3" style="min-width:340px">Menú / acción</th>{% for role in matrix.roles %}<th scope="col" class="text-center" style="min-width:145px">{{ role.nombre }}</th>{% endfor %}</tr></thead><tbody>
+<section class="card shadow-sm border-0 bi-permission-matrix"><div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2"><h2 class="h6 mb-0 bi-title">Matriz de módulos y acciones</h2><div class="bi-permission-legend" aria-label="Leyenda de permisos"><span><i class="bi-permission-legend__dot is-on" aria-hidden="true"></i>Activo</span><span><i class="bi-permission-legend__dot is-off" aria-hidden="true"></i>Inactivo</span></div></div><div class="card-body p-0"><div class="table-responsive bi-permission-table-wrap"><table class="table table-hover align-middle mb-0" id="permissionsMatrix"><thead><tr><th scope="col" class="ps-3" style="min-width:320px">Módulo / acción</th>{% for role in matrix.roles %}<th scope="col" class="text-center" style="min-width:132px">{{ role.nombre }}</th>{% endfor %}</tr></thead><tbody>
 {% for sectionName, section in permission_groups %}
-<tr class="bi-permission-section"><th scope="rowgroup" colspan="{{ matrix.roles|length + 1 }}" class="ps-3 py-3"><span class="text-uppercase small fw-bold">{{ sectionName }}</span></th></tr>
+<tr class="bi-permission-section"><th scope="rowgroup" colspan="{{ matrix.roles|length + 1 }}" class="ps-3 py-3"><i class="{{ moduleIcons[sectionName]|default('fa-solid fa-layer-group') }} me-2" aria-hidden="true"></i><span>{{ sectionName }}</span></th></tr>
 {% for permission in section.permission_rows %}
-<tr><th scope="row" class="ps-4 fw-medium">{{ permission.nombre }}<small class="d-block text-muted fw-normal ms-1">{{ permission.descripcion|default(permission.slug) }}</small></th>{% for role in matrix.roles %}{% set isAdministrator = role.slug in ['admin', 'developer'] %}{% set permissionEnabled = permission.id in role.permisos_efectivos_ids %}<td class="text-center"><label class="form-check d-flex justify-content-center align-items-center m-0 py-2" title="{{ permission.nombre }} para {{ role.nombre }}"><input class="form-check-input m-0 matrix-permission" type="checkbox" data-role="{{ role.slug }}" data-permission="{{ permission.slug }}" data-saved-value="{{ permissionEnabled ? '1' : '0' }}" data-csrf="{{ csrf }}" aria-label="{{ permission.nombre }} para {{ role.nombre }}" {{ permissionEnabled ? 'checked' : '' }} {{ isAdministrator ? 'disabled' : '' }}><span class="visually-hidden">{{ permission.nombre }} para {{ role.nombre }}</span></label>{% if isAdministrator %}<small class="d-block text-muted">Bloqueado</small>{% else %}<small class="matrix-cell-status small d-block" aria-live="polite"></small>{% endif %}</td>{% endfor %}</tr>
+<tr class="bi-permission-action"><th scope="row" class="ps-5 fw-medium">{{ permission.nombre }}<small class="d-block text-muted fw-normal">{{ permission.descripcion|default(permission.slug) }}</small></th>{% for role in matrix.roles %}{% set isAdministrator = role.slug in ['admin', 'developer'] %}{% set permissionEnabled = permission.id in role.permisos_efectivos_ids %}<td class="text-center"><label class="permission-switch-label m-0 py-2" title="{{ permissionEnabled ? 'Activo' : 'Inactivo' }}"><input class="matrix-permission" type="checkbox" role="switch" data-role="{{ role.slug }}" data-permission="{{ permission.slug }}" data-saved-value="{{ permissionEnabled ? '1' : '0' }}" data-csrf="{{ csrf }}" title="{{ permissionEnabled ? 'Activo' : 'Inactivo' }}" aria-label="{{ permission.nombre }} para {{ role.nombre }}: {{ permissionEnabled ? 'Activo' : 'Inactivo' }}" {{ permissionEnabled ? 'checked' : '' }} {{ isAdministrator ? 'disabled' : '' }}><span class="permission-switch-track" aria-hidden="true"></span><span class="visually-hidden">{{ permission.nombre }} para {{ role.nombre }}: {{ permissionEnabled ? 'Activo' : 'Inactivo' }}{% if isAdministrator %}; protegido por acceso total del rol{% endif %}</span></label><small class="matrix-cell-status small d-block" aria-live="polite">{% if isAdministrator %}<span class="visually-hidden">Permiso protegido por acceso total.</span>{% endif %}</small></td>{% endfor %}</tr>
 {% endfor %}{% endfor %}
 {% if not matrix.roles or not matrix.permissions %}<tr><td colspan="{{ matrix.roles|length + 1 }}" class="p-4 text-center text-muted">No hay roles o permisos configurados.</td></tr>{% endif %}
 </tbody></table></div></div></section>
-<details class="card shadow-sm border-0 mt-4 bi-effective-access" id="effectiveAccessPanel"><summary class="card-header" style="cursor:pointer">Consultar acceso efectivo por usuario</summary><div class="card-body"><div id="effectiveAccessForm" data-endpoint="{{ get_base_url() }}admin/consultar_acceso_efectivo" class="row g-2 align-items-end"><div class="col-md-9"><label class="form-label" for="matrixUser">Usuario</label><select class="form-select" id="matrixUser" name="usuario" aria-controls="effectiveAccessResult"><option value="">Selecciona un usuario</option>{% for item in matrix_users %}<option value="{{ item.id }}">{{ item.nombre|default(item.username) }} · {{ item.username }}</option>{% endfor %}</select></div></div><div id="effectiveAccessFeedback" class="small mt-3" role="status" aria-live="polite"></div><div id="effectiveAccessResult" class="mt-3" aria-live="polite"></div></div></details>
+<details class="card shadow-sm border-0 mt-4 bi-effective-access" id="effectiveAccessPanel"><summary class="card-header" style="cursor:pointer"><i class="fa-solid fa-user-check me-2" aria-hidden="true"></i>Consultar permisos de usuario</summary><div class="card-body"><p class="small text-muted mb-3">Consulta todos los permisos del usuario según su rol. Esta sección no modifica accesos.</p><div id="effectiveAccessForm" data-endpoint="{{ get_base_url() }}admin/consultar_acceso_efectivo" class="row g-2 align-items-end"><div class="col-md-5"><label class="form-label" for="matrixUserSearch">Buscar usuario</label><input class="form-control" id="matrixUserSearch" type="search" placeholder="Nombre o usuario" autocomplete="off" aria-controls="matrixUser"></div><div class="col-md-7"><label class="form-label" for="matrixUser">Seleccionar usuario</label><select class="form-select" id="matrixUser" name="usuario" aria-controls="effectiveAccessResult"><option value="">Selecciona un usuario</option>{% for item in matrix_users %}<option value="{{ item.id }}" data-search="{{ item.nombre|default(item.username) }} {{ item.username }}">{{ item.nombre|default(item.username) }} · {{ item.username }}</option>{% endfor %}</select><div class="form-text" id="matrixUserNoResults" hidden>No hay usuarios que coincidan con la búsqueda.</div></div></div><div id="effectiveAccessFeedback" class="small mt-3" role="status" aria-live="polite"></div><div id="effectiveAccessResult" class="mt-3" aria-live="polite"></div></div></details>
 <script>
 (() => {
   const endpoint = '{{ get_base_url() }}admin/guardar_permisos_rol';
@@ -32,12 +33,18 @@
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.message || 'No se pudo guardar el permiso.');
       checkbox.dataset.savedValue = checkbox.checked ? '1' : '0';
+      checkbox.title = checkbox.checked ? 'Activo' : 'Inactivo';
+      checkbox.closest('.permission-switch-label').title = checkbox.title;
+      checkbox.setAttribute('aria-label', `${checkbox.getAttribute('aria-label').replace(/: (Activo|Inactivo)$/, '')}: ${checkbox.checked ? 'Activo' : 'Inactivo'}`);
       status.textContent = '✓ Guardado';
       status.className = 'matrix-cell-status small d-block text-success';
       feedback.textContent = result.message;
       feedback.className = 'small mb-3 text-success';
     } catch (error) {
       checkbox.checked = previous === '1';
+      checkbox.title = checkbox.checked ? 'Activo' : 'Inactivo';
+      checkbox.closest('.permission-switch-label').title = checkbox.title;
+      checkbox.setAttribute('aria-label', `${checkbox.getAttribute('aria-label').replace(/: (Activo|Inactivo)$/, '')}: ${checkbox.checked ? 'Activo' : 'Inactivo'}`);
       status.textContent = error.message;
       status.className = 'matrix-cell-status small d-block text-danger';
       feedback.textContent = error.message;
@@ -47,11 +54,31 @@
 
   const form = document.getElementById('effectiveAccessForm');
   const userSelect = document.getElementById('matrixUser');
+  const userSearch = document.getElementById('matrixUserSearch');
+  const noUserMatches = document.getElementById('matrixUserNoResults');
   const panel = document.getElementById('effectiveAccessPanel');
   const queryFeedback = document.getElementById('effectiveAccessFeedback');
   const resultPanel = document.getElementById('effectiveAccessResult');
   let activeRequest = null;
   let requestNumber = 0;
+  userSearch.addEventListener('input', () => {
+    const term = userSearch.value.trim().toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    let matchCount = 0;
+    Array.from(userSelect.options).slice(1).forEach(option => {
+      const text = (option.dataset.search || option.textContent).toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const matches = text.includes(term);
+      option.hidden = !matches;
+      option.disabled = !matches;
+      if (matches) matchCount++;
+      if (!matches && option.selected) userSelect.value = '';
+    });
+    noUserMatches.hidden = matchCount > 0;
+    if (!userSelect.value) {
+      activeRequest?.abort();
+      resultPanel.replaceChildren();
+      queryFeedback.textContent = '';
+    }
+  });
   userSelect.addEventListener('change', async () => {
     const selectedUserId = userSelect.value;
     activeRequest?.abort();

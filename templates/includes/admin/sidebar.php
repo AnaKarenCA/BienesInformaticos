@@ -6,26 +6,26 @@
 
   <hr class="sidebar-divider my-0">
   <div class="sidebar-heading">Principal</div>
-  <div class="nav-item <?php echo CONTROLLER === 'admin' && METHOD === 'index' ? 'active' : ''; ?>">
+  <?php if (can_user((string) get_user('rol'), 'inicio-consultar')): ?><div class="nav-item <?php echo CONTROLLER === 'admin' && METHOD === 'index' ? 'active' : ''; ?>">
     <a class="nav-link" href="admin" aria-label="Inicio" title="Inicio" <?php echo CONTROLLER === 'admin' && METHOD === 'index' ? 'aria-current="page"' : ''; ?>><i class="fas fa-fw fa-chart-pie" aria-hidden="true"></i><span>Inicio</span></a>
-  </div>
+  </div><?php endif; ?>
   <hr class="sidebar-divider">
 
-  <button class="bi-nav-section" type="button" data-toggle="collapse" data-target="#legacyInventory" aria-controls="legacyInventory" aria-expanded="<?php echo in_array(CONTROLLER, ['identificar', 'bienes'], true) ? 'true' : 'false'; ?>" aria-label="Inventario" title="Inventario"><i class="fas fa-fw fa-boxes-stacked me-2" aria-hidden="true"></i><span class="bi-nav-label">Inventario</span><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
+  <?php if (can_user((string) get_user('rol'), 'bienes-consultar')): ?><button class="bi-nav-section" type="button" data-toggle="collapse" data-target="#legacyInventory" aria-controls="legacyInventory" aria-expanded="<?php echo in_array(CONTROLLER, ['identificar', 'bienes'], true) ? 'true' : 'false'; ?>" aria-label="Inventario" title="Inventario"><i class="fas fa-fw fa-boxes-stacked me-2" aria-hidden="true"></i><span class="bi-nav-label">Inventario</span><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
   <div class="collapse <?php echo in_array(CONTROLLER, ['identificar', 'bienes'], true) ? 'show' : ''; ?>" id="legacyInventory">
-    <div class="nav-item <?php echo CONTROLLER === 'identificar' ? 'active' : ''; ?>"><a class="nav-link" href="identificar" aria-label="Identificar bien" title="Identificar bien"><i class="fas fa-fw fa-barcode" aria-hidden="true"></i><span>Identificar bien</span></a></div>
+    <div class="nav-item <?php echo CONTROLLER === 'identificar' ? 'active' : ''; ?>"><a class="nav-link" href="identificar" aria-label="Identificar bien" title="Identificar bien"><i class="fas fa-fw fa-qrcode" aria-hidden="true"></i><span>Identificar bien</span></a></div>
     <div class="nav-item <?php echo CONTROLLER === 'bienes' ? 'active' : ''; ?>"><a class="nav-link" href="bienes" aria-label="Inventario" title="Inventario"><i class="fas fa-fw fa-laptop" aria-hidden="true"></i><span>Inventario</span></a></div>
-  </div>
-  <button class="bi-nav-section" type="button" data-toggle="collapse" data-target="#legacyCustody" aria-controls="legacyCustody" aria-expanded="<?php echo in_array(CONTROLLER, ['resguardos', 'historico_movimientos'], true) ? 'true' : 'false'; ?>" aria-label="Resguardos y movimientos" title="Resguardos y movimientos"><i class="fas fa-fw fa-folder-open me-2" aria-hidden="true"></i><span class="bi-nav-label">Resguardos y movimientos</span><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
+  </div><?php endif; ?>
+  <?php if (can_user((string) get_user('rol'), 'resguardos-consultar') || can_user((string) get_user('rol'), 'movimientos-consultar')): ?><button class="bi-nav-section" type="button" data-toggle="collapse" data-target="#legacyCustody" aria-controls="legacyCustody" aria-expanded="<?php echo in_array(CONTROLLER, ['resguardos', 'historico_movimientos'], true) ? 'true' : 'false'; ?>" aria-label="Resguardos y movimientos" title="Resguardos y movimientos"><i class="fas fa-fw fa-folder-open me-2" aria-hidden="true"></i><span class="bi-nav-label">Resguardos y movimientos</span><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
   <div class="collapse <?php echo in_array(CONTROLLER, ['resguardos', 'historico_movimientos'], true) ? 'show' : ''; ?>" id="legacyCustody">
-    <div class="nav-item <?php echo CONTROLLER === 'resguardos' ? 'active' : ''; ?>"><a class="nav-link" href="resguardos" aria-label="Resguardos" title="Resguardos"><i class="fas fa-fw fa-clipboard-user" aria-hidden="true"></i><span>Resguardos</span></a></div>
-    <div class="nav-item <?php echo CONTROLLER === 'historico_movimientos' ? 'active' : ''; ?>"><a class="nav-link" href="historico-movimientos" aria-label="Histórico de movimientos" title="Histórico de movimientos"><i class="fas fa-fw fa-clock-rotate-left" aria-hidden="true"></i><span>Histórico de movimientos</span></a></div>
-    <?php if (can_user((string) get_user('rol'), 'inventario-consultar')): ?><div class="nav-item"><a class="nav-link" href="resguardos/tarjeta" aria-label="Tarjeta de resguardo" title="Tarjeta de resguardo"><i class="fas fa-fw fa-id-card" aria-hidden="true"></i><span>Tarjeta de resguardo</span></a></div>
+    <?php if (can_user((string) get_user('rol'), 'resguardos-consultar')): ?><div class="nav-item <?php echo CONTROLLER === 'resguardos' ? 'active' : ''; ?>"><a class="nav-link" href="resguardos" aria-label="Resguardos" title="Resguardos"><i class="fas fa-fw fa-clipboard-user" aria-hidden="true"></i><span>Resguardos</span></a></div><?php endif; ?>
+    <?php if (can_user((string) get_user('rol'), 'movimientos-consultar')): ?><div class="nav-item <?php echo CONTROLLER === 'historico_movimientos' ? 'active' : ''; ?>"><a class="nav-link" href="historico-movimientos" aria-label="Histórico de movimientos" title="Histórico de movimientos"><i class="fas fa-fw fa-clock-rotate-left" aria-hidden="true"></i><span>Histórico de movimientos</span></a></div><?php endif; ?>
+    <?php if (can_user((string) get_user('rol'), 'resguardos-consultar')): ?><div class="nav-item"><a class="nav-link" href="resguardos/tarjeta" aria-label="Tarjeta de resguardo" title="Tarjeta de resguardo"><i class="fas fa-fw fa-id-card" aria-hidden="true"></i><span>Tarjeta de resguardo</span></a></div>
     <div class="nav-item"><a class="nav-link" href="resguardos/resguardo_equipo" aria-label="Resguardo del equipo" title="Resguardo del equipo"><i class="fas fa-fw fa-file-signature" aria-hidden="true"></i><span>Resguardo del equipo</span></a></div>
     <div class="nav-item"><a class="nav-link" href="resguardos/baja_resguardante" aria-label="Baja de resguardante" title="Baja de resguardante"><i class="fas fa-fw fa-file-circle-minus" aria-hidden="true"></i><span>Baja de resguardante</span></a></div>
     <?php endif; ?>
-  </div>
-  <?php if (can_user((string) get_user('rol'), 'inventario-consultar')): ?>
+  </div><?php endif; ?>
+  <?php if (can_user((string) get_user('rol'), 'catalogos-consultar')): ?>
   <button class="bi-nav-section" type="button" data-toggle="collapse" data-target="#legacyCatalogs" aria-controls="legacyCatalogs" aria-expanded="<?php echo CONTROLLER === 'catalogos' ? 'true' : 'false'; ?>" aria-label="Catálogos" title="Catálogos"><i class="fas fa-fw fa-list me-2" aria-hidden="true"></i><span class="bi-nav-label">Catálogos</span><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
   <div class="collapse <?php echo CONTROLLER === 'catalogos' ? 'show' : ''; ?>" id="legacyCatalogs">
     <div class="nav-item <?php echo CONTROLLER === 'catalogos' && METHOD === 'clasificacion' ? 'active' : ''; ?>"><a class="nav-link" href="catalogos/clasificacion" aria-label="Clasificación" title="Clasificación"><i class="fas fa-fw fa-sitemap" aria-hidden="true"></i><span>Clasificación</span></a></div>
@@ -40,7 +40,7 @@
 
   <?php if (can_user((string) get_user('rol'), 'admin-access')): ?><div class="sidebar-heading">Administración</div>
   <div class="nav-item <?php echo CONTROLLER === 'admin' && METHOD === 'usuarios' ? 'active' : ''; ?>">
-    <a class="nav-link" href="admin/usuarios" aria-label="Usuarios" title="Usuarios" <?php echo CONTROLLER === 'admin' && METHOD === 'usuarios' ? 'aria-current="page"' : ''; ?>><i class="fas fa-fw fa-users" aria-hidden="true"></i><span>Usuarios<?php if (!empty($d->pending_user_count)): ?> <span class="badge text-bg-warning"><?php echo (int) $d->pending_user_count; ?> pendientes</span><?php endif; ?></span></a>
+    <a class="nav-link" href="admin/usuarios" aria-label="Usuarios" title="Usuarios" <?php echo CONTROLLER === 'admin' && METHOD === 'usuarios' ? 'aria-current="page"' : ''; ?>><i class="fas fa-fw fa-users" aria-hidden="true"></i><span>Usuarios</span></a>
   </div>
   <div class="nav-item <?php echo CONTROLLER === 'admin' && METHOD === 'productos' ? 'active' : ''; ?>">
     <a class="nav-link" href="admin/productos" aria-label="Productos" title="Productos" <?php echo CONTROLLER === 'admin' && METHOD === 'productos' ? 'aria-current="page"' : ''; ?>><i class="fas fa-fw fa-tag" aria-hidden="true"></i><span>Productos</span></a>

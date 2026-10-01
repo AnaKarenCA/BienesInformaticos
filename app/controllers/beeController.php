@@ -200,39 +200,8 @@ class beeController extends Controller implements ControllerInterface
    */
   function generate_user()
   {
-    try {
-      if (!is_local()) {
-        throw new Exception(get_bee_message(0));
-      }
-
-      if (!Model::table_exists(BEE_USERS_TABLE)) {
-        throw new Exception(sprintf('Es necesaria la tabla <b>%s</b> en la base de datos.', BEE_USERS_TABLE));
-      }
-
-      // Nuevo usuario
-      $username = sprintf('bee%s', random_password(4, 'numeric'));
-      $password = get_new_password();
-      $email    = sprintf('%s@localhost.com', $username);
-      $user     =
-        [
-          'username'   => $username,
-          'password'   => $password['hash'],
-          'email'      => $email,
-          'created_at' => now()
-        ];
-
-      // Insertando el registro en la base de datos
-      if (!$id = Model::add(BEE_USERS_TABLE, $user)) {
-        throw new Exception('Hubo un problema al generar el usuario.');
-      }
-
-      Flasher::success(sprintf('Nuevo usuario generado con éxito:<br>Usuario: <b>%s</b><br>Contraseña: <b>%s</b>', $user['username'], $password['password']));
-      Redirect::back();
-
-    } catch (Exception $e) {
-      Flasher::error($e->getMessage());
-      Redirect::back();
-    }
+    Flasher::error('La creación de cuentas está disponible únicamente desde Administración > Todos los usuarios.');
+    Redirect::to('login');
   }
 
   /**

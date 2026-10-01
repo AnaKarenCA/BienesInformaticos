@@ -30,3 +30,6 @@
 
 <!-- Scripts personalizados Bee Framework -->
 <script src="<?php echo JS . 'main.min.js?v=' . get_asset_version(); ?>"></script>
+
+<!-- Normalización global de acciones, estados y tooltips -->
+<script src="<?php echo JS . 'system-ui.js?v=' . get_asset_version(); ?>"></script>

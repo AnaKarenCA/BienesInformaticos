@@ -4,6 +4,7 @@ class identificarController extends InventoryController implements ControllerInt
 {
   public function index()
   {
+    $this->requirePermission('bienes-consultar');
     $consulta = trim((string) ($_GET['q'] ?? ''));
     $coincidencias = $consulta !== '' ? BienModel::identificarCoincidencias($consulta) : [];
     $bien = [];

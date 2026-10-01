@@ -3,12 +3,24 @@
 /** Catálogos que alimentan el inventario patrimonial. */
 class CatalogoModel extends Model
 {
+  private static function unidadTieneColumnaActivo(): bool
+  {
+    static $tieneActivo = null;
+    if ($tieneActivo === null) {
+      $columnas = parent::query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'unidad_administrativa' AND COLUMN_NAME = 'activo' LIMIT 1");
+      $tieneActivo = (bool) $columnas;
+    }
+    return $tieneActivo;
+  }
+
   private const TIPOS = [
     'generico' => ['tabla' => 'activo_generico', 'id' => 'id_activo_generico', 'campos' => ['nombre', 'descripcion']],
     'grupo' => ['tabla' => 'grupo_activo', 'id' => 'id_grupo_activo', 'campos' => ['id_activo_generico', 'nombre', 'descripcion']],
     'especifico' => ['tabla' => 'activo_especifico', 'id' => 'id_activo_especifico', 'campos' => ['id_grupo_activo', 'nombre', 'descripcion']],
     'marca' => ['tabla' => 'marca', 'id' => 'id_marca', 'campos' => ['nombre']],
     'modelo' => ['tabla' => 'modelo', 'id' => 'id_modelo', 'campos' => ['id_marca', 'nombre']],
+    'color' => ['tabla' => 'color', 'id' => 'id_color', 'campos' => ['nombre']],
+    'material' => ['tabla' => 'material', 'id' => 'id_material', 'campos' => ['nombre']],
     'ubicacion' => ['tabla' => 'ubicacion', 'id' => 'id_ubicacion', 'campos' => ['municipio', 'localidad']],
     'unidad' => ['tabla' => 'unidad_administrativa', 'id' => 'id_unidad', 'campos' => ['codigo_ua', 'nombre', 'id_padre']],
     'estado' => ['tabla' => 'estado_uso', 'id' => 'id_estado_uso', 'campos' => ['nombre']],
@@ -24,12 +36,16 @@ class CatalogoModel extends Model
   private static function validarDuplicado(string $tipo, array $datos, ?int $id): void
   {
     $config = self::TIPOS[$tipo];
+    if (in_array($tipo, ['generico', 'grupo', 'especifico', 'marca', 'modelo', 'estado', 'color', 'material'], true)) {
+      if (self::encontrarDuplicado($tipo, $datos, $id)) throw new Exception('Ya existe un registro con esa información en este catálogo.');
+      return;
+    }
     $filas = parent::query('SELECT * FROM ' . $config['tabla']) ?: [];
     if ($id) {
       foreach ($filas as $fila) {
         if ((int) $fila[$config['id']] !== $id) continue;
         $mismosDatosUnicos = match ($tipo) {
-          'generico', 'marca', 'estado' => self::normalizarUnico($fila['nombre']) === self::normalizarUnico($datos['nombre'] ?? ''),
+          'generico', 'marca', 'estado', 'color', 'material' => self::normalizarUnico($fila['nombre']) === self::normalizarUnico($datos['nombre'] ?? ''),
           'grupo' => (int) $fila['id_activo_generico'] === (int) ($datos['id_activo_generico'] ?? 0) && self::normalizarUnico($fila['nombre']) === self::normalizarUnico($datos['nombre'] ?? ''),
           'especifico' => (int) $fila['id_grupo_activo'] === (int) ($datos['id_grupo_activo'] ?? 0) && self::normalizarUnico($fila['nombre']) === self::normalizarUnico($datos['nombre'] ?? ''),
           'modelo' => (int) $fila['id_marca'] === (int) ($datos['id_marca'] ?? 0) && self::normalizarUnico($fila['nombre']) === self::normalizarUnico($datos['nombre'] ?? ''),
@@ -46,7 +62,7 @@ class CatalogoModel extends Model
       $igual = static fn($a, $b) => self::normalizarUnico($a) === self::normalizarUnico($b);
       $duplicado = false;
       switch ($tipo) {
-        case 'generico': case 'marca': case 'estado':
+        case 'generico': case 'marca': case 'estado': case 'color': case 'material':
           $duplicado = $igual($fila['nombre'] ?? '', $datos['nombre'] ?? ''); break;
         case 'grupo':
           $duplicado = (int) $fila['id_activo_generico'] === (int) $datos['id_activo_generico'] && $igual($fila['nombre'], $datos['nombre']); break;
@@ -72,7 +88,13 @@ class CatalogoModel extends Model
     $datos = [];
     foreach ($config['campos'] as $campo) {
       $valor = isset($entrada[$campo]) ? trim((string) $entrada[$campo]) : null;
+      if ($valor !== null && in_array($campo, ['nombre', 'municipio', 'localidad'], true)) $valor = preg_replace('/\s+/u', ' ', $valor);
       $datos[$campo] = $valor === '' ? null : $valor;
+    }
+    if (in_array($tipo, ['color', 'material'], true)) {
+      $limite = $tipo === 'color' ? 100 : 150;
+      if (mb_strlen((string) ($datos['nombre'] ?? ''), 'UTF-8') > $limite) throw new Exception('El nombre excede la longitud permitida para este catálogo.');
+      $datos['nombre_normalizado'] = self::normalizarUnico($datos['nombre'] ?? '');
     }
     if (empty($datos['nombre']) && !in_array($tipo, ['ubicacion', 'unidad'], true)) throw new Exception('El nombre es requerido.');
     if ($tipo === 'ubicacion' && (empty($datos['municipio']) || empty($datos['localidad']))) throw new Exception('Municipio y localidad son requeridos.');
@@ -87,12 +109,16 @@ class CatalogoModel extends Model
     }
     if ($tipo === 'grupo' && !self::relacionValidaOActual('activo_generico', 'id_activo_generico', (int) ($datos['id_activo_generico'] ?? 0), 'grupo_activo', 'id_grupo_activo', 'id_activo_generico', $id)) throw new Exception('Selecciona un activo genérico existente y activo.');
     if ($tipo === 'especifico' && !self::relacionValidaOActual('grupo_activo', 'id_grupo_activo', (int) ($datos['id_grupo_activo'] ?? 0), 'activo_especifico', 'id_activo_especifico', 'id_grupo_activo', $id)) throw new Exception('Selecciona un grupo de activo existente y activo.');
+    if ($tipo === 'especifico' && !empty($entrada['id_activo_generico'])) {
+      $grupo = parent::query('SELECT id_activo_generico FROM grupo_activo WHERE id_grupo_activo = :id LIMIT 1', ['id' => (int) $datos['id_grupo_activo']]);
+      if (!$grupo || (int) $grupo[0]['id_activo_generico'] !== (int) $entrada['id_activo_generico']) throw new Exception('El grupo no corresponde al activo genérico seleccionado.');
+    }
     if ($tipo === 'modelo' && !self::relacionValidaOActual('marca', 'id_marca', (int) ($datos['id_marca'] ?? 0), 'modelo', 'id_modelo', 'id_marca', $id)) throw new Exception('Selecciona una marca existente y activa.');
     if ($id && !parent::query('SELECT ' . $config['id'] . ' FROM ' . $config['tabla'] . ' WHERE ' . $config['id'] . ' = :id LIMIT 1', ['id' => $id])) throw new Exception('El registro solicitado no existe.');
     self::validarDuplicado($tipo, $datos, $id);
     try {
       if ($id) { parent::update($config['tabla'], [$config['id'] => $id], $datos); return $id; }
-      if ($tipo !== 'unidad') $datos['activo'] = 1;
+      if (!$id && ($tipo !== 'unidad' || self::unidadTieneColumnaActivo())) $datos['activo'] = 1;
       return (int) parent::add($config['tabla'], $datos);
     } catch (PDOException $e) {
       if (str_contains($e->getMessage(), '23000') || str_contains($e->getMessage(), '1062')) throw new Exception('El registro ya existe. Verifica la información capturada.');
@@ -102,7 +128,8 @@ class CatalogoModel extends Model
 
   public static function cambiarEstado(string $tipo, int $id): bool
   {
-    if (!isset(self::TIPOS[$tipo]) || $tipo === 'unidad') throw new Exception('Esta acción no está disponible para este catálogo.');
+    if (!isset(self::TIPOS[$tipo])) throw new Exception('Esta acción no está disponible para este catálogo.');
+    if ($tipo === 'unidad' && !self::unidadTieneColumnaActivo()) throw new Exception('La base de datos actual no incluye estado para las unidades administrativas.');
     $config = self::TIPOS[$tipo];
     $fila = parent::list($config['tabla'], [$config['id'] => $id], 1);
     if (!$fila) throw new Exception('El registro solicitado no existe.');
@@ -154,6 +181,8 @@ class CatalogoModel extends Model
       'marca' => 'SELECT * FROM marca ORDER BY nombre',
       'modelo' => 'SELECT mo.*, m.nombre AS marca_nombre FROM modelo mo INNER JOIN marca m ON m.id_marca = mo.id_marca ORDER BY m.nombre, mo.nombre',
       'estado' => 'SELECT * FROM estado_uso ORDER BY nombre',
+      'color' => 'SELECT * FROM color ORDER BY nombre',
+      'material' => 'SELECT * FROM material ORDER BY nombre',
       'ubicacion' => 'SELECT id_ubicacion, municipio, localidad, activo FROM ubicacion ORDER BY municipio, localidad, id_ubicacion',
     ];
     if (!isset($consultas[$tipo])) throw new Exception('Catálogo no válido.');
@@ -169,25 +198,31 @@ class CatalogoModel extends Model
 
   public static function grupos(?int $activoGenericoId = null, ?int $incluirId = null): array
   {
-    $sql = 'SELECT * FROM grupo_activo WHERE activo = 1';
     $params = [];
     if ($activoGenericoId) {
-      $sql .= ' AND id_activo_generico = :id';
-      $params['id'] = $activoGenericoId;
+      $where = '((activo = 1 AND id_activo_generico = :generico)';
+      $params['generico'] = $activoGenericoId;
+      if ($incluirId) { $where .= ' OR (id_grupo_activo = :incluir AND id_activo_generico = :generico_inc)'; $params['incluir'] = $incluirId; $params['generico_inc'] = $activoGenericoId; }
+      $sql = 'SELECT * FROM grupo_activo WHERE ' . $where . ')';
+    } else {
+      $sql = 'SELECT * FROM grupo_activo WHERE activo = 1';
+      if ($incluirId) { $sql .= ' OR id_grupo_activo = :incluir'; $params['incluir'] = $incluirId; }
     }
-    if ($incluirId) { $sql .= ' OR id_grupo_activo = :incluir'; $params['incluir'] = $incluirId; }
     return parent::query($sql . ' ORDER BY nombre', $params) ?: [];
   }
 
   public static function activosEspecificos(?int $grupoId = null, ?int $incluirId = null): array
   {
-    $sql = 'SELECT * FROM activo_especifico WHERE activo = 1';
     $params = [];
     if ($grupoId) {
-      $sql .= ' AND id_grupo_activo = :id';
-      $params['id'] = $grupoId;
+      $where = '((activo = 1 AND id_grupo_activo = :grupo)';
+      $params['grupo'] = $grupoId;
+      if ($incluirId) { $where .= ' OR (id_activo_especifico = :incluir AND id_grupo_activo = :grupo_inc)'; $params['incluir'] = $incluirId; $params['grupo_inc'] = $grupoId; }
+      $sql = 'SELECT * FROM activo_especifico WHERE ' . $where . ')';
+    } else {
+      $sql = 'SELECT * FROM activo_especifico WHERE activo = 1';
+      if ($incluirId) { $sql .= ' OR id_activo_especifico = :incluir'; $params['incluir'] = $incluirId; }
     }
-    if ($incluirId) { $sql .= ' OR id_activo_especifico = :incluir'; $params['incluir'] = $incluirId; }
     return parent::query($sql . ' ORDER BY nombre', $params) ?: [];
   }
 
@@ -208,11 +243,48 @@ class CatalogoModel extends Model
     }
   }
 
-  public static function marcas(): array { return parent::query('SELECT * FROM marca WHERE activo = 1 ORDER BY nombre') ?: []; }
-  public static function modelos(?int $marcaId = null): array
+  public static function marcas(?int $incluirId = null): array { return self::catalogoActivo('marca', 'id_marca', $incluirId); }
+  public static function colores(?int $incluirId = null): array { return self::catalogoActivo('color', 'id_color', $incluirId); }
+  public static function materiales(?int $incluirId = null): array { return self::catalogoActivo('material', 'id_material', $incluirId); }
+  private static function catalogoActivo(string $tabla, string $id, ?int $incluirId): array
   {
-    $sql = 'SELECT * FROM modelo WHERE activo = 1'; $params = [];
-    if ($marcaId) { $sql .= ' AND id_marca = :id'; $params['id'] = $marcaId; }
+    $sql = "SELECT * FROM {$tabla} WHERE activo = 1"; $params = [];
+    if ($incluirId) { $sql .= " OR {$id} = :incluir"; $params['incluir'] = $incluirId; }
+    return parent::query($sql . ' ORDER BY nombre', $params) ?: [];
+  }
+  public static function porId(string $tipo, int $id): array
+  {
+    if (!isset(self::TIPOS[$tipo])) return [];
+    $config = self::TIPOS[$tipo];
+    $rows = parent::query('SELECT * FROM ' . $config['tabla'] . ' WHERE ' . $config['id'] . ' = :id LIMIT 1', ['id' => $id]);
+    return $rows[0] ?? [];
+  }
+  public static function encontrarDuplicado(string $tipo, array $entrada, ?int $excluirId = null): array
+  {
+    if (!in_array($tipo, ['generico', 'grupo', 'especifico', 'marca', 'modelo', 'estado', 'color', 'material'], true)) return [];
+    $config = self::TIPOS[$tipo];
+    $columnaNombre = in_array($tipo, ['color', 'material'], true) ? 'nombre_normalizado' : 'nombre';
+    $sql = 'SELECT * FROM ' . $config['tabla'] . ' WHERE ' . $columnaNombre . ' = :nombre';
+    $nombre = trim(preg_replace('/\s+/u', ' ', (string) ($entrada['nombre'] ?? '')));
+    $params = ['nombre' => in_array($tipo, ['color', 'material'], true) ? self::normalizarUnico($nombre) : $nombre];
+    if ($tipo === 'grupo') { $sql .= ' AND id_activo_generico = :padre'; $params['padre'] = (int) ($entrada['id_activo_generico'] ?? 0); }
+    if ($tipo === 'especifico') { $sql .= ' AND id_grupo_activo = :padre'; $params['padre'] = (int) ($entrada['id_grupo_activo'] ?? 0); }
+    if ($tipo === 'modelo') { $sql .= ' AND id_marca = :padre'; $params['padre'] = (int) ($entrada['id_marca'] ?? 0); }
+    if ($excluirId) { $sql .= ' AND ' . $config['id'] . ' <> :excluir'; $params['excluir'] = $excluirId; }
+    $rows = parent::query($sql . ' ORDER BY activo DESC, ' . $config['id'] . ' ASC LIMIT 1', $params);
+    return $rows[0] ?? [];
+  }
+  public static function modelos(?int $marcaId = null, ?int $incluirId = null): array
+  {
+    $params = [];
+    if ($marcaId) {
+      $where = '((activo = 1 AND id_marca = :marca)'; $params['marca'] = $marcaId;
+      if ($incluirId) { $where .= ' OR (id_modelo = :incluir AND id_marca = :marca_inc)'; $params['incluir'] = $incluirId; $params['marca_inc'] = $marcaId; }
+      $sql = 'SELECT * FROM modelo WHERE ' . $where . ')';
+    } else {
+      $sql = 'SELECT * FROM modelo WHERE activo = 1';
+      if ($incluirId) { $sql .= ' OR id_modelo = :incluir'; $params['incluir'] = $incluirId; }
+    }
     return parent::query($sql . ' ORDER BY nombre', $params) ?: [];
   }
 
@@ -238,19 +310,41 @@ class CatalogoModel extends Model
     if ($incluirId) { $sql .= ' OR id_estado_uso = :incluir'; $params['incluir'] = $incluirId; }
     return parent::query($sql . ' ORDER BY nombre', $params) ?: [];
   }
-  public static function ubicaciones(): array
+  public static function ubicaciones(?int $incluirId = null): array
   {
-    return parent::query('SELECT MIN(id_ubicacion) AS id_ubicacion, municipio, localidad FROM ubicacion WHERE activo = 1 GROUP BY municipio, localidad ORDER BY municipio, localidad') ?: [];
+    $sql = 'SELECT MIN(id_ubicacion) AS id_ubicacion, municipio, localidad FROM ubicacion WHERE activo = 1 GROUP BY municipio, localidad';
+    $params = [];
+    if ($incluirId) {
+      $sql = 'SELECT ubicaciones.id_ubicacion, ubicaciones.municipio, ubicaciones.localidad FROM (' . $sql . ' UNION SELECT id_ubicacion, municipio, localidad FROM ubicacion WHERE id_ubicacion = :id) ubicaciones';
+      $params['id'] = $incluirId;
+    }
+    return parent::query($sql . ' ORDER BY municipio, localidad', $params) ?: [];
   }
-  public static function municipios(): array
+  public static function municipios(?int $incluirUbicacionId = null): array
   {
-    return parent::query('SELECT DISTINCT municipio FROM ubicacion WHERE activo = 1 ORDER BY municipio') ?: [];
+    $sql = 'SELECT DISTINCT municipio FROM ubicacion WHERE activo = 1'; $params = [];
+    if ($incluirUbicacionId) {
+      $sql = 'SELECT DISTINCT municipio FROM ubicacion WHERE activo = 1 UNION SELECT municipio FROM ubicacion WHERE id_ubicacion = :id';
+      $params['id'] = $incluirUbicacionId;
+    }
+    return parent::query($sql . ' ORDER BY municipio', $params) ?: [];
   }
-  public static function unidades(): array { return parent::query('SELECT * FROM unidad_administrativa ORDER BY codigo_ua IS NULL, codigo_ua, nombre') ?: []; }
+  public static function unidades(): array
+  {
+    $consulta = self::unidadTieneColumnaActivo()
+      ? 'SELECT * FROM unidad_administrativa ORDER BY codigo_ua IS NULL, codigo_ua, nombre'
+      : 'SELECT unidad_administrativa.*, 1 AS activo FROM unidad_administrativa ORDER BY codigo_ua IS NULL, codigo_ua, nombre';
+    return parent::query($consulta) ?: [];
+  }
 
   public static function unidadesAdministrativas(): array
   {
-    return parent::query('SELECT u.*, p.nombre AS padre_nombre FROM unidad_administrativa u LEFT JOIN unidad_administrativa p ON p.id_unidad = u.id_padre ORDER BY u.codigo_ua IS NULL, u.codigo_ua, u.nombre') ?: [];
+    $tieneActivo = self::unidadTieneColumnaActivo();
+    $camposUnidad = $tieneActivo ? 'u.*' : 'u.*, 1 AS activo';
+    $unidades = parent::query("SELECT {$camposUnidad}, p.nombre AS padre_nombre FROM unidad_administrativa u LEFT JOIN unidad_administrativa p ON p.id_unidad = u.id_padre ORDER BY u.codigo_ua IS NULL, u.codigo_ua, u.nombre") ?: [];
+    foreach ($unidades as &$unidad) $unidad['estado_administrable'] = $tieneActivo;
+    unset($unidad);
+    return $unidades;
   }
 
   public static function unidadPorCodigo(string $codigo): array
@@ -258,22 +352,6 @@ class CatalogoModel extends Model
     $rows = parent::query('SELECT * FROM unidad_administrativa WHERE codigo_ua = :codigo LIMIT 1', ['codigo' => trim($codigo)]);
     return $rows ? $rows[0] : [];
   }
-  public static function eliminarUnidadSiNoTieneDependencias(int $id): void
-  {
-    if (!self::unidadExiste($id)) throw new Exception('La unidad administrativa solicitada no existe.');
-    $dependencias = [
-      ['unidad_administrativa', 'id_padre', 'otras unidades administrativas'],
-      ['bien', 'id_unidad', 'bienes'],
-      ['resguardante', 'id_unidad', 'resguardantes'],
-    ];
-    foreach ($dependencias as [$tabla, $campo, $etiqueta]) {
-      if (parent::query("SELECT {$campo} FROM {$tabla} WHERE {$campo} = :id LIMIT 1", ['id' => $id])) {
-        throw new Exception("No se puede eliminar: la unidad tiene {$etiqueta} relacionados.");
-      }
-    }
-    parent::query('DELETE FROM unidad_administrativa WHERE id_unidad = :id', ['id' => $id]);
-  }
-
   private static function unidadEsDescendiente(int $posibleDescendiente, int $ancestro): bool
   {
     $unidades = self::unidades();
@@ -300,13 +378,33 @@ class CatalogoModel extends Model
     return (bool) parent::query('SELECT id_unidad FROM unidad_administrativa WHERE id_unidad = :id LIMIT 1', ['id' => $id]);
   }
 
+  public static function unidadActivaOActual(int $id, ?int $actualId = null): bool
+  {
+    if ($id < 1) return false;
+    if (!self::unidadTieneColumnaActivo()) return self::unidadExiste($id);
+    return (bool) parent::query('SELECT id_unidad FROM unidad_administrativa WHERE id_unidad = :id AND (activo = 1 OR id_unidad = :actual) LIMIT 1', ['id' => $id, 'actual' => (int) $actualId]);
+  }
+
   /**
    * La estructura administrativa ya existe como árbol; estos campos se derivan
    * de sus ancestros y no se duplican como columnas nuevas.
    */
-  public static function unidadesConJerarquia(): array
+  public static function unidadesConJerarquia(?int $incluirId = null): array
   {
-    $unidades = self::unidades();
+    $todas = self::unidades();
+    $porId = [];
+    foreach ($todas as $unidad) $porId[(int) $unidad['id_unidad']] = $unidad;
+    $incluidas = [];
+    $agregarAncestros = static function (int $id) use (&$incluidas, $porId): void {
+      $cursor = $id; $visitados = [];
+      while ($cursor && !isset($visitados[$cursor]) && isset($porId[$cursor])) {
+        $visitados[$cursor] = true; $incluidas[$cursor] = true;
+        $cursor = (int) ($porId[$cursor]['id_padre'] ?? 0);
+      }
+    };
+    foreach ($todas as $unidad) if ((int) $unidad['activo'] === 1) $agregarAncestros((int) $unidad['id_unidad']);
+    if ($incluirId) $agregarAncestros($incluirId);
+    $unidades = array_values(array_filter($todas, static fn($unidad) => isset($incluidas[(int) $unidad['id_unidad']])));
     foreach ($unidades as &$unidad) $unidad['administracion'] = self::jerarquiaUnidad((int) $unidad['id_unidad'], $unidades);
     unset($unidad);
     return $unidades;

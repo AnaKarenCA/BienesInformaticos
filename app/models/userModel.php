@@ -38,19 +38,22 @@ class userModel extends Model {
       $where[] = '(u.username LIKE :search_user OR u.nombre LIKE :search_name OR u.email LIKE :search_email)';
       $params['search_user'] = $params['search_name'] = $params['search_email'] = '%' . $search . '%';
     }
-    if (in_array($status, ['activo', 'inactivo', 'pendiente', 'rechazada'], true)) {
-      if ($status === 'activo') $where[] = "u.activo = 1 AND u.estado = 'aprobada'";
-      elseif ($status === 'inactivo') $where[] = "(u.activo = 0 OR u.estado = 'rechazada')";
-      else { $where[] = 'u.estado = :estado'; $params['estado'] = $status; }
+    if (in_array($status, ['activo', 'inactivo'], true)) {
+      $where[] = 'u.activo = :activo';
+      $params['activo'] = $status === 'activo' ? 1 : 0;
     }
-    $sql = sprintf('SELECT u.*, (SELECT r.nombre FROM bee_roles r WHERE r.slug = u.rol ORDER BY r.id LIMIT 1) AS rol_nombre FROM %s u%s ORDER BY u.id DESC', self::$t1, $where ? ' WHERE ' . implode(' AND ', $where) : '');
+    $sql = sprintf("SELECT u.*, CASE WHEN u.apellido_paterno <> '' THEN TRIM(LEFT(u.nombre, CHAR_LENGTH(u.nombre) - CHAR_LENGTH(CONCAT_WS(' ', NULLIF(u.apellido_paterno, ''), NULLIF(u.apellido_materno, ''))))) ELSE '' END AS nombre_pila, (SELECT r.nombre FROM bee_roles r WHERE r.slug = u.rol ORDER BY r.id LIMIT 1) AS rol_nombre FROM %s u%s ORDER BY u.id DESC", self::$t1, $where ? ' WHERE ' . implode(' AND ', $where) : '');
     return PaginationHandler::paginate($sql, $params, 20, null, false, true, 7);
   }
 
   static function permission_matrix(): array
   {
     $roles = (new BeeRoleManager())->getRoles() ?: [];
+    // Se conservan las claves heredadas en la base de datos por compatibilidad,
+    // pero las acciones actuales de la matriz usan sus reemplazos granulares.
+    $legacySlugs = ['inventario-consultar', 'bienes-guardar', 'bienes-inactivar', 'catalogos-guardar', 'catalogos-inactivar', 'catalogos-eliminar'];
     $permissions = parent::query('SELECT id, nombre, slug, descripcion FROM bee_permisos ORDER BY nombre, id') ?: [];
+    $permissions = array_values(array_filter($permissions, static fn($permission) => !in_array((string) ($permission['slug'] ?? ''), $legacySlugs, true)));
     foreach ($permissions as &$permission) $permission['id'] = (int) $permission['id'];
     unset($permission);
     foreach ($roles as &$role) {
@@ -70,7 +73,7 @@ class userModel extends Model {
 
   static function users_for_matrix(): array
   {
-    return parent::query('SELECT id, username, nombre, email, rol, activo, estado FROM ' . self::$t1 . ' ORDER BY nombre, username') ?: [];
+    return parent::query("SELECT u.id, u.username, u.nombre, u.apellido_paterno, u.apellido_materno, u.email, u.rol, u.activo, (SELECT r.nombre FROM bee_roles r WHERE r.slug = u.rol ORDER BY r.id LIMIT 1) AS rol_nombre FROM " . self::$t1 . " u ORDER BY u.nombre, u.username") ?: [];
   }
 
   static function by_id($id)
@@ -80,39 +83,17 @@ class userModel extends Model {
     return ($rows = parent::query($sql, ['id' => $id])) ? $rows[0] : [];
   }
 
-  static function pending_approval(): array
+  /** Datos de cuenta para el perfil propio, con el nombre propio derivado del nombre completo existente. */
+  static function profile_by_id(int $id): array
   {
-    $sql = 'SELECT id, username, email, nombre, telefono, rol, estado, created_at
-            FROM ' . self::$t1 . ' WHERE estado = :estado ORDER BY created_at ASC, id ASC';
-    return parent::query($sql, ['estado' => 'pendiente']) ?: [];
-  }
-
-  static function count_pending(): int
-  {
-    $rows = parent::query('SELECT COUNT(*) AS total FROM ' . self::$t1 . ' WHERE estado = :estado', ['estado' => 'pendiente']);
-    return (int) ($rows[0]['total'] ?? 0);
-  }
-
-  static function assignable_roles(): array
-  {
-    $sql = "SELECT id, nombre, slug FROM bee_roles WHERE slug IN ('capturista', 'consultor') ORDER BY nombre";
-    return parent::query($sql) ?: [];
-  }
-
-  static function approve(int $id): bool
-  {
-    return parent::query('UPDATE ' . self::$t1 . " SET estado = 'aprobada', activo = 1, rol = 'consultor' WHERE id = :id AND estado = 'pendiente'", ['id' => $id]) !== false;
-  }
-
-  static function reject(int $id): bool
-  {
-    return parent::query('UPDATE ' . self::$t1 . " SET estado = 'rechazada', activo = 0, auth_token = NULL WHERE id = :id AND estado = 'pendiente'", ['id' => $id]) !== false;
+    $sql = "SELECT u.*, CASE WHEN u.apellido_paterno <> '' THEN TRIM(LEFT(u.nombre, CHAR_LENGTH(u.nombre) - CHAR_LENGTH(CONCAT_WS(' ', NULLIF(u.apellido_paterno, ''), NULLIF(u.apellido_materno, ''))))) ELSE u.nombre END AS nombre_pila, (SELECT r.nombre FROM bee_roles r WHERE r.slug = u.rol ORDER BY r.id LIMIT 1) AS rol_nombre FROM " . self::$t1 . " u WHERE u.id = :id LIMIT 1";
+    return ($rows = parent::query($sql, ['id' => $id])) ? $rows[0] : [];
   }
 
   static function assign_role(int $id, string $role): bool
   {
     if (!in_array($role, ['capturista', 'consultor'], true)) return false;
-    return parent::query('UPDATE ' . self::$t1 . " SET rol = :rol WHERE id = :id AND estado = 'aprobada' AND activo = 1", ['id' => $id, 'rol' => $role]) !== false;
+    return parent::query('UPDATE ' . self::$t1 . ' SET rol = :rol WHERE id = :id AND activo = 1', ['id' => $id, 'rol' => $role]) !== false;
   }
 
   static function update_by_id($id, $params)

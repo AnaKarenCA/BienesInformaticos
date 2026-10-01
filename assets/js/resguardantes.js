@@ -1,4 +1,24 @@
 (() => {
+  const searchInput = document.querySelector('[data-resguardante-search]');
+  if (searchInput) {
+    searchInput.closest('form')?.addEventListener('submit', event => event.preventDefault());
+    const rows = [...document.querySelectorAll('[data-resguardante-row]')];
+    const emptyRow = document.querySelector('[data-resguardante-no-results]');
+    const normalize = value => (value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
+    const filterRows = () => {
+      const query = normalize(searchInput.value.trim());
+      let visible = 0;
+      rows.forEach(row => {
+        const matches = normalize(row.dataset.search).includes(query);
+        row.classList.toggle('d-none', !matches);
+        if (matches) visible++;
+      });
+      emptyRow?.classList.toggle('d-none', visible !== 0 || rows.length === 0);
+    };
+    searchInput.addEventListener('input', filterRows);
+    filterRows();
+  }
+
   const mostrarNombreSeleccionado = selector => {
     const nombre = selector?.selectedOptions?.[0]?.dataset.nombre || '';
     if (selector?.id === 'bienResguardante') {
