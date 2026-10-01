@@ -223,6 +223,63 @@ class adminController extends Controller implements ControllerInterface
     exit;
   }
 
+  /** Comprueba duplicados de correo y teléfono para validación anticipada del formulario. */
+  function validar_duplicados_usuario()
+  {
+    try {
+      if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !Csrf::validate($_POST['csrf'] ?? '')) throw new Exception('La solicitud de validación no es válida.');
+      $targetId = (int) ($_POST['user_id'] ?? 0);
+      $this->requirePermission($targetId > 0 ? 'usuarios-actualizar' : 'usuarios-crear');
+      if ($targetId > 0 && !userModel::by_id($targetId)) throw new Exception('El usuario ya no existe.');
+
+      $email = trim((string) sanitize_input($_POST['email'] ?? ''));
+      $phone = trim((string) ($_POST['telefono'] ?? ''));
+      $duplicates = self::duplicateContactMessages($email, $phone, $targetId ?: null);
+      if ($duplicates && $targetId === 0) {
+        $message = self::safeUserCreationError(implode(' ', $duplicates));
+        Flasher::error($message);
+        $this->jsonResponse(true, $message, 200, ['duplicates' => $duplicates, 'notification_html' => Flasher::flash()]);
+      }
+      $this->jsonResponse(true, '', 200, ['duplicates' => $duplicates]);
+    } catch (Throwable $e) {
+      if ((int) ($_POST['user_id'] ?? 0) === 0) {
+        $message = 'Usuario no agregado, verificar datos';
+        Flasher::error($message);
+        $this->jsonResponse(false, $message, 422, ['notification_html' => Flasher::flash()]);
+      }
+      $this->jsonResponse(false, $e->getMessage(), 422);
+    }
+  }
+
+  /** Limita los mensajes AJAX de alta a textos seguros y entendibles para administración. */
+  private static function safeUserCreationError(string $error): string
+  {
+    $reasons = [];
+    if (strpos($error, 'El correo electrónico ya está registrado') !== false) $reasons[] = 'El correo electrónico ya está registrado.';
+    if (strpos($error, 'El número de celular ya está registrado') !== false) $reasons[] = 'El número de celular ya está registrado.';
+    if (strpos($error, 'El usuario generado ya está registrado') !== false) $reasons[] = 'El usuario generado ya está registrado. Intenta nuevamente.';
+    return $reasons ? 'Usuario no agregado, verificar datos. ' . implode(' ', $reasons) : 'Usuario no agregado, verificar datos';
+  }
+
+  /** Devuelve mensajes para los datos de contacto que ya pertenecen a otra cuenta. */
+  private static function duplicateContactMessages(string $email, string $phone, ?int $excludeId = null): array
+  {
+    $messages = [];
+    $emailSql = 'SELECT id FROM bee_users WHERE email = :email';
+    $emailParams = ['email' => $email];
+    $phoneSql = 'SELECT id FROM bee_users WHERE telefono = :telefono';
+    $phoneParams = ['telefono' => $phone];
+    if ($excludeId !== null) {
+      $emailSql .= ' AND id <> :exclude_id';
+      $phoneSql .= ' AND id <> :exclude_id';
+      $emailParams['exclude_id'] = $phoneParams['exclude_id'] = $excludeId;
+    }
+    $owner = $excludeId !== null ? ' por otro usuario' : '';
+    if ($email !== '' && userModel::query($emailSql . ' LIMIT 1', $emailParams)) $messages[] = 'El correo electrónico ya está registrado' . $owner . '.';
+    if ($phone !== '' && userModel::query($phoneSql . ' LIMIT 1', $phoneParams)) $messages[] = 'El número de celular ya está registrado' . $owner . '.';
+    return $messages;
+  }
+
   function matriz_permisos()
   {
     $this->requireAdministratorRole('roles-consultar');
@@ -447,23 +504,24 @@ class adminController extends Controller implements ControllerInterface
       $targetId = (int) $id;
       $target = userModel::by_id($targetId);
       if (!$target) throw new Exception('El usuario ya no existe.');
-      $username = trim((string) ($_POST['username'] ?? ''));
+      // El nombre de acceso se conserva y no se incluye en los cambios de edición.
       $name = trim((string) ($_POST['nombre'] ?? ''));
       $email = trim((string) ($_POST['email'] ?? ''));
       $role = trim((string) ($_POST['rol'] ?? ''));
       $paternal = trim((string) ($_POST['apellido_paterno'] ?? ''));
       $maternal = trim((string) ($_POST['apellido_materno'] ?? ''));
+      $phone = trim((string) ($_POST['telefono'] ?? ''));
       $length = function ($value) { return function_exists('mb_strlen') ? mb_strlen($value, 'UTF-8') : strlen($value); };
       $fullName = trim($name . ' ' . $paternal . ' ' . $maternal);
       if ($name === '' || $paternal === '' || $maternal === '' || $length($name) > 80 || $length($paternal) > 80 || $length($maternal) > 80 || $length($fullName) > 150) throw new Exception('Nombre y apellidos son obligatorios y deben respetar sus límites de longitud.');
-      if (!preg_match('/^[a-zA-Z0-9]{5,20}$/', $username)) throw new Exception('El usuario debe contener entre 5 y 20 letras o números.');
       if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $length($email) > 100) throw new Exception('El correo electrónico no es válido o supera 100 caracteres.');
+      if ($phone !== '' && !preg_match('/^[0-9]{7,15}$/', $phone)) throw new Exception('El teléfono debe contener únicamente entre 7 y 15 dígitos.');
       $validRoles = array_column((new BeeRoleManager())->getRoles() ?: [], 'slug');
       if ($role === '' || !in_array($role, $validRoles, true)) throw new Exception('El rol seleccionado no existe.');
       if ($targetId === (int) get_user('id') && $role !== (string) ($target['rol'] ?? '')) throw new Exception('No puedes cambiar tu propio rol.');
-      $duplicate = userModel::query('SELECT id FROM bee_users WHERE id <> :id AND (username = :username OR email = :email)', ['id' => $targetId, 'username' => $username, 'email' => $email]);
-      if ($duplicate) throw new Exception('Ese usuario o correo ya está registrado en otra cuenta.');
-      if (!userModel::update_by_id($targetId, ['username' => $username, 'nombre' => $fullName, 'apellido_paterno' => $paternal, 'apellido_materno' => $maternal, 'email' => $email, 'rol' => $role])) throw new Exception('No se pudieron guardar los cambios.');
+      $duplicates = self::duplicateContactMessages($email, $phone, $targetId);
+      if ($duplicates) throw new Exception(implode(' ', $duplicates));
+      if (!userModel::update_by_id($targetId, ['nombre' => $fullName, 'apellido_paterno' => $paternal, 'apellido_materno' => $maternal, 'email' => $email, 'telefono' => $phone, 'rol' => $role])) throw new Exception('No se pudieron guardar los cambios.');
       if ($this->isAjaxRequest()) $this->jsonResponse(true, 'La información del usuario se actualizó.');
       Flasher::success('La información del usuario se actualizó.');
     } catch (Throwable $e) {
@@ -473,11 +531,58 @@ class adminController extends Controller implements ControllerInterface
     Redirect::to('admin/usuarios');
   }
 
+  private static function generateRandomPassword(): string
+  {
+    $sets = [
+      'abcdefghijklmnopqrstuvwxyz',
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+      '0123456789',
+      '!@#$%^&*_',
+    ];
+    $allCharacters = implode('', $sets);
+
+    do {
+      $characters = [];
+      foreach ($sets as $set) {
+        $characters[] = $set[random_int(0, strlen($set) - 1)];
+      }
+      while (count($characters) < 12) {
+        $characters[] = $allCharacters[random_int(0, strlen($allCharacters) - 1)];
+      }
+      for ($index = count($characters) - 1; $index > 0; $index--) {
+        $swapIndex = random_int(0, $index);
+        [$characters[$index], $characters[$swapIndex]] = [$characters[$swapIndex], $characters[$index]];
+      }
+      $password = implode('', $characters);
+    } while (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*_])[A-Za-z\d!@#$%^&*_]{8,20}$/', $password));
+
+    return $password;
+  }
+
+  /** Crea un identificador con nombre, iniciales de apellidos y dos dígitos aleatorios. */
+  private static function generateUniqueUsername(string $name, string $paternal, string $maternal): string
+  {
+    $ascii = static function (string $value): string {
+      $converted = function_exists('iconv') ? iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value) : $value;
+      return preg_replace('/[^a-zA-Z0-9]/', '', (string) $converted);
+    };
+    $firstName = strtolower($ascii($name));
+    $initials = strtoupper(substr($ascii($paternal), 0, 1) . substr($ascii($maternal), 0, 1));
+    if ($firstName === '' || strlen($initials) !== 2) throw new Exception('No se pudo generar un usuario con el nombre y apellidos capturados.');
+    $firstName = substr($firstName, 0, 16);
+
+    for ($attempt = 0; $attempt < 1000; $attempt++) {
+      $candidate = $firstName . $initials . str_pad((string) random_int(0, 99), 2, '0', STR_PAD_LEFT);
+      if (!userModel::query('SELECT id FROM bee_users WHERE username = :username LIMIT 1', ['username' => $candidate])) return $candidate;
+    }
+    throw new Exception('El usuario generado ya está registrado. Intenta nuevamente.');
+  }
+
   function post_usuarios()
   {
     try {
       $this->requirePermission('usuarios-crear');
-      if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !check_posted_data(['username', 'email', 'password', 'nombre', 'apellido_paterno', 'apellido_materno'], $_POST)) {
+      if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !check_posted_data(['email', 'nombre', 'apellido_paterno', 'apellido_materno'], $_POST)) {
         throw new Exception('Por favor completa el formulario.');
       }
 
@@ -485,26 +590,15 @@ class adminController extends Controller implements ControllerInterface
         throw new Exception(get_bee_message(0));
       }
 
-      $username = trim((string) sanitize_input($_POST['username']));
       $email = trim((string) sanitize_input($_POST['email']));
       $name = trim((string) sanitize_input($_POST['nombre']));
       $paternal = trim((string) sanitize_input($_POST['apellido_paterno']));
       $maternal = trim((string) sanitize_input($_POST['apellido_materno']));
       $phone = (string) ($_POST['telefono'] ?? '');
       $fullName = trim($name . ' ' . $paternal . ' ' . $maternal);
-      $password = (string) ($_POST['password'] ?? '');
       $role = trim((string) sanitize_input($_POST['rol'] ?? '')) ?: 'consultor';
       $errorMessage = '';
       $errors = 0;
-
-      if (userModel::query('SELECT id FROM bee_users WHERE username = :username OR email = :email', ['username' => $username, 'email' => $email])) {
-        throw new Exception('Ya existe un usuario registrado con ese nombre de usuario o correo electrónico.');
-      }
-
-      if (!preg_match('/^[a-zA-Z0-9]{5,20}$/', $username)) {
-        $errorMessage .= '- Tu nombre de usuario debe estar formado por mínimo 5 caracteres y máximo 20.<br>';
-        $errors++;
-      }
 
       $length = function ($value) { return function_exists('mb_strlen') ? mb_strlen($value, 'UTF-8') : strlen($value); };
       if ($name === '' || $paternal === '' || $maternal === '' || $length($name) > 80 || $length($paternal) > 80 || $length($maternal) > 80 || $length($fullName) > 150) {
@@ -519,11 +613,6 @@ class adminController extends Controller implements ControllerInterface
 
       if (is_temporary_email($email)) {
         $errorMessage .= '- El dominio del correo electrónico no está autorizado.<br>';
-        $errors++;
-      }
-
-      if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*_-])[A-Za-z\d!@#$%^&*_-]{5,20}$/', $password)) {
-        $errorMessage .= '- La contraseña debe ser de entre 5 y 20 caracteres, por lo menos debe contar con: 1 letra minúscula, 1 letra mayúscula, 1 digito y 1 caracter especial de entre <b>!@#$%^&*_-</b>';
         $errors++;
       }
 
@@ -542,6 +631,11 @@ class adminController extends Controller implements ControllerInterface
         throw new Exception($errorMessage);
       }
 
+      $duplicates = self::duplicateContactMessages($email, $phone);
+      if ($duplicates) throw new Exception(implode(' ', $duplicates));
+
+      $username = self::generateUniqueUsername($name, $paternal, $maternal);
+      $password = self::generateRandomPassword();
       // La fecha y el estado activo inicial se asignan exclusivamente en servidor.
       $user = [
         'username' => $username,
@@ -558,16 +652,53 @@ class adminController extends Controller implements ControllerInterface
 
       // Insertando el registro en la base de datos
       if (!$id = userModel::add(userModel::$t1, $user)) {
+        unset($password);
         throw new Exception('Hubo un problema al agregar el usuario.');
       }
 
-      if ($this->isAjaxRequest()) $this->jsonResponse(true, 'Nuevo usuario agregado con éxito.');
-      Flasher::success(sprintf('Nuevo usuario agregado con éxito. Usuario: <b>%s</b>.', $user['username']));
+      $safeName = htmlspecialchars($fullName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      $safeUsername = htmlspecialchars($username, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      $safePassword = htmlspecialchars($password, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      $safeLoginUrl = htmlspecialchars(get_base_url() . 'login', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+      $emailBody = '<p>Hola, ' . $safeName . ':</p>'
+        . '<p>Tu cuenta de acceso al sistema Bienes Informáticos ha sido creada correctamente.</p>'
+        . '<p><strong>Usuario:</strong> ' . $safeUsername . '<br>'
+        . '<strong>Contraseña temporal:</strong> ' . $safePassword . '</p>'
+        . '<p>Te recomendamos mantener estas credenciales seguras y no compartirlas con otras personas.</p>'
+        . '<p>Ya puedes <a href="' . $safeLoginUrl . '">iniciar sesión en el sistema</a>.</p>'
+        . '<p>Saludos.</p>';
+      $emailAlt = "Hola, {$fullName}:\n\nTu cuenta de acceso al sistema Bienes Informáticos ha sido creada correctamente.\n\n"
+        . "Usuario: {$username}\nContraseña temporal: {$password}\n\n"
+        . "Te recomendamos mantener estas credenciales seguras y no compartirlas con otras personas.\n"
+        . 'Ya puedes iniciar sesión en el sistema: ' . get_base_url() . "login\n\nSaludos.";
+      $emailSent = false;
+      try {
+        $emailSent = send_email(get_siteemail(), $email, 'Credenciales de acceso - Bienes Informáticos', $emailBody, $emailAlt) === true;
+      } catch (Throwable $mailError) {
+        // No incluir datos SMTP ni la contraseña temporal en alertas o logs.
+      }
+      unset($password, $safePassword, $emailBody, $emailAlt);
+
+      $message = $emailSent
+        ? 'Usuario Agregado'
+        : 'Usuario Agregado, pero no se pudieron enviar las credenciales por correo.';
+      if ($this->isAjaxRequest()) {
+        if ($emailSent) Flasher::success($message);
+        else Flasher::warn($message);
+        $this->jsonResponse(true, $message, 200, ['email_sent' => $emailSent, 'notification_html' => Flasher::flash()]);
+      }
+      if ($emailSent) Flasher::success($message);
+      else Flasher::warn($message);
       Redirect::back();
 
     } catch (Exception $e) {
-      if ($this->isAjaxRequest()) $this->jsonResponse(false, strip_tags($e->getMessage()), 422);
-      Flasher::error($e->getMessage());
+      unset($password, $safePassword, $emailBody, $emailAlt);
+      $message = self::safeUserCreationError($e->getMessage());
+      if ($this->isAjaxRequest()) {
+        Flasher::error($message);
+        $this->jsonResponse(false, $message, 422, ['notification_html' => Flasher::flash()]);
+      }
+      Flasher::error($message);
       Redirect::back();
     }
   }
@@ -677,11 +808,11 @@ class adminController extends Controller implements ControllerInterface
     Redirect::to('admin');
   }
 
-  private function jsonResponse(bool $success, string $message, int $status = 200): void
+  private function jsonResponse(bool $success, string $message, int $status = 200, array $extra = []): void
   {
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['success' => $success, 'message' => $message]);
+    echo json_encode(array_merge(['success' => $success, 'message' => $message], $extra));
     exit;
   }
 

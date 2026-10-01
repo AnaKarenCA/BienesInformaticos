@@ -7,7 +7,8 @@
  * sean modificadas en el proceso por accidente así como el basepath y otras constantes que requieran
  * configuración especial en producción
  */
-define('IS_LOCAL'     , in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1']));
+//define('IS_LOCAL'     , in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1']));
+define('IS_LOCAL'     , true);
 define('DEV_PATH'     , '/BienesInformaticos/'); // Ruta del proyecto en desarrollo después de htdocs o www
 define('LIVE_PATH'    , '/'); // Ruta del proyecto en producción
 define('BASEPATH'     , IS_LOCAL ? DEV_PATH : LIVE_PATH);

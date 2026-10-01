@@ -130,6 +130,9 @@ class CatalogoModel extends Model
   {
     if (!isset(self::TIPOS[$tipo])) throw new Exception('Esta acción no está disponible para este catálogo.');
     if ($tipo === 'unidad' && !self::unidadTieneColumnaActivo()) throw new Exception('La base de datos actual no incluye estado para las unidades administrativas.');
+    if ($tipo === 'unidad' && parent::query('SELECT id_unidad FROM unidad_administrativa WHERE id_padre = :id LIMIT 1', ['id' => $id])) {
+      throw new Exception('No se puede cambiar el estado de esta unidad mientras tenga unidades dependientes.');
+    }
     $config = self::TIPOS[$tipo];
     $fila = parent::list($config['tabla'], [$config['id'] => $id], 1);
     if (!$fila) throw new Exception('El registro solicitado no existe.');
@@ -147,12 +150,13 @@ class CatalogoModel extends Model
       }
     } else {
       $padres = [
-        'grupo' => ['activo_generico', 'id_activo_generico', (int) $fila['id_activo_generico']],
-        'especifico' => ['grupo_activo', 'id_grupo_activo', (int) $fila['id_grupo_activo']],
-        'modelo' => ['marca', 'id_marca', (int) $fila['id_marca']],
+        'grupo' => ['activo_generico', 'id_activo_generico'],
+        'especifico' => ['grupo_activo', 'id_grupo_activo'],
+        'modelo' => ['marca', 'id_marca'],
       ];
       if (isset($padres[$tipo])) {
-        [$tabla, $campo, $padreId] = $padres[$tipo];
+        [$tabla, $campo] = $padres[$tipo];
+        $padreId = (int) $fila[$campo];
         if (!self::relacionActiva($tabla, $campo, $padreId)) throw new Exception('Activa primero el elemento superior relacionado antes de reactivar este registro.');
       }
     }
@@ -341,8 +345,11 @@ class CatalogoModel extends Model
   {
     $tieneActivo = self::unidadTieneColumnaActivo();
     $camposUnidad = $tieneActivo ? 'u.*' : 'u.*, 1 AS activo';
-    $unidades = parent::query("SELECT {$camposUnidad}, p.nombre AS padre_nombre FROM unidad_administrativa u LEFT JOIN unidad_administrativa p ON p.id_unidad = u.id_padre ORDER BY u.codigo_ua IS NULL, u.codigo_ua, u.nombre") ?: [];
-    foreach ($unidades as &$unidad) $unidad['estado_administrable'] = $tieneActivo;
+    $unidades = parent::query("SELECT {$camposUnidad}, p.nombre AS padre_nombre, EXISTS(SELECT 1 FROM unidad_administrativa dependiente WHERE dependiente.id_padre = u.id_unidad) AS tiene_dependientes FROM unidad_administrativa u LEFT JOIN unidad_administrativa p ON p.id_unidad = u.id_padre ORDER BY u.codigo_ua IS NULL, u.codigo_ua, u.nombre") ?: [];
+    foreach ($unidades as &$unidad) {
+      $unidad['estado_administrable'] = $tieneActivo;
+      $unidad['tiene_dependientes'] = (bool) $unidad['tiene_dependientes'];
+    }
     unset($unidad);
     return $unidades;
   }

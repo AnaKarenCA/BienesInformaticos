@@ -152,7 +152,8 @@
     }
     form.action = `${baseAction}/${trigger.dataset.id}`;
     form.querySelectorAll('input:not([type="hidden"]), select, textarea').forEach(field => {
-      const attribute = `data-${field.name.replaceAll('_', '-')}`;
+      const dataAttributeNames = {nombre: 'name', descripcion: 'description', codigo_ua: 'codigo-ua'};
+      const attribute = `data-${dataAttributeNames[field.name] || field.name.replaceAll('_', '-')}`;
       const value = field.name === 'id_padre' || field.name.startsWith('id_') && field.name !== 'id_unidad'
         ? (trigger.dataset.parent ?? trigger.getAttribute(attribute))
         : trigger.getAttribute(attribute);

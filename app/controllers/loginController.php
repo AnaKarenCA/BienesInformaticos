@@ -18,8 +18,104 @@ class loginController extends Controller implements ControllerInterface
     $this->setEngine('twig');
     $this->addToData('csrf', (new Csrf())->get_token());
     $this->addToData('flash_html', Flasher::flash());
+    $flow = $_SESSION['password_recovery_flow'] ?? null;
+    $verified = $_SESSION['password_recovery_verified'] ?? null;
+    if (is_array($verified) && (int) ($verified['expires_at'] ?? 0) <= time()) {
+      unset($_SESSION['password_recovery_verified'], $_SESSION['password_recovery_flow']);
+      $flow = null;
+      $verified = null;
+    }
+    $this->addToData('recovery_step', is_array($verified) ? 'password' : (is_array($flow) ? 'verify' : 'request'));
+    $this->addToData('recovery_open', is_array($flow) || is_array($verified));
+    $this->addToData('recovery_email_available', PasswordRecoveryService::isMethodConfigured('email'));
+    $this->addToData('recovery_whatsapp_available', PasswordRecoveryService::isMethodConfigured('whatsapp'));
+    $this->addToData('recovery_ttl_minutes', PasswordRecoveryService::codeTtlMinutes());
     $this->setView('login');
     $this->render();
+  }
+
+  function recovery_request()
+  {
+    try {
+      if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !Csrf::validate($_POST['csrf'] ?? '')) throw new Exception('La solicitud no es válida. Actualiza la página e inténtalo nuevamente.');
+      $method = (string) ($_POST['method'] ?? '');
+      $contact = (string) ($method === 'email' ? ($_POST['email'] ?? '') : ($_POST['telefono'] ?? ''));
+      $lookupHash = PasswordRecoveryService::requestCode($method, $contact, (string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+      $_SESSION['password_recovery_flow'] = ['lookup_hash' => $lookupHash, 'method' => $method];
+      unset($_SESSION['password_recovery_verified']);
+      Flasher::info('Si los datos proporcionados corresponden a una cuenta activa, recibirás un código de recuperación por el medio seleccionado.');
+    } catch (InvalidArgumentException $e) {
+      Flasher::error($e->getMessage());
+    } catch (RuntimeException $e) {
+      Flasher::warn('Este medio de recuperación no está disponible en este momento. Contacta a administración.');
+    } catch (Throwable $e) {
+      Flasher::error('No fue posible procesar la solicitud. Inténtalo nuevamente más tarde.');
+    }
+    Redirect::to('login#recuperar-contrasena');
+  }
+
+  function recovery_verify()
+  {
+    try {
+      if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !Csrf::validate($_POST['csrf'] ?? '')) throw new Exception('La solicitud no es válida. Actualiza la página e inténtalo nuevamente.');
+      $flow = $_SESSION['password_recovery_flow'] ?? null;
+      if (!is_array($flow) || empty($flow['lookup_hash'])) throw new Exception('Inicia nuevamente la solicitud de recuperación.');
+      $result = PasswordRecoveryService::verifyCode((string) $flow['lookup_hash'], trim((string) ($_POST['code'] ?? '')));
+      if ($result['status'] === 'expired') throw new Exception('El código ha expirado. Solicita uno nuevo.');
+      if ($result['status'] !== 'verified') throw new Exception('El código ingresado no es válido.');
+      $_SESSION['password_recovery_verified'] = [
+        'reset_id' => $result['reset_id'],
+        'user_id' => $result['user_id'],
+        'expires_at' => $result['expires_at'],
+      ];
+    } catch (Throwable $e) {
+      $expected = [
+        'La solicitud no es válida. Actualiza la página e inténtalo nuevamente.',
+        'Inicia nuevamente la solicitud de recuperación.',
+        'El código ha expirado. Solicita uno nuevo.',
+        'El código ingresado no es válido.',
+      ];
+      Flasher::error(in_array($e->getMessage(), $expected, true) ? $e->getMessage() : 'No fue posible verificar el código. Inténtalo nuevamente.');
+    }
+    Redirect::to('login#recuperar-contrasena');
+  }
+
+  function recovery_reset()
+  {
+    $success = false;
+    try {
+      if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !Csrf::validate($_POST['csrf'] ?? '')) throw new Exception('La solicitud no es válida. Actualiza la página e inténtalo nuevamente.');
+      $verified = $_SESSION['password_recovery_verified'] ?? null;
+      if (!is_array($verified) || (int) ($verified['expires_at'] ?? 0) <= time()) throw new Exception('La verificación expiró. Solicita un nuevo código.');
+      $password = (string) ($_POST['password'] ?? '');
+      $confirmation = (string) ($_POST['password_confirm'] ?? '');
+      if ($password !== $confirmation) throw new Exception('Las contraseñas no coinciden.');
+      if (!PasswordRecoveryService::validateNewPassword($password)) throw new Exception('La contraseña debe tener entre 5 y 20 caracteres e incluir minúscula, mayúscula, número y un carácter especial permitido (!@#$%^&*_-).');
+      if (!PasswordRecoveryService::resetPassword((int) $verified['reset_id'], (int) $verified['user_id'], $password)) throw new Exception('La verificación expiró o ya fue utilizada. Solicita un nuevo código.');
+      unset($_SESSION['password_recovery_verified'], $_SESSION['password_recovery_flow']);
+      Flasher::success('La contraseña se ha restablecido correctamente. Ya puedes iniciar sesión con tu nueva contraseña.');
+      $success = true;
+    } catch (Throwable $e) {
+      $expected = [
+        'La solicitud no es válida. Actualiza la página e inténtalo nuevamente.',
+        'La verificación expiró. Solicita un nuevo código.',
+        'Las contraseñas no coinciden.',
+        'La contraseña debe tener entre 5 y 20 caracteres e incluir minúscula, mayúscula, número y un carácter especial permitido (!@#$%^&*_-).',
+        'La verificación expiró o ya fue utilizada. Solicita un nuevo código.',
+      ];
+      Flasher::error(in_array($e->getMessage(), $expected, true) ? $e->getMessage() : 'No fue posible restablecer la contraseña. Inténtalo nuevamente.');
+    }
+    Redirect::to($success ? 'login' : 'login#recuperar-contrasena');
+  }
+
+  function recovery_cancel()
+  {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && Csrf::validate($_POST['csrf'] ?? '')) {
+      unset($_SESSION['password_recovery_verified'], $_SESSION['password_recovery_flow']);
+    } else {
+      Flasher::error('La solicitud no es válida. Actualiza la página e inténtalo nuevamente.');
+    }
+    Redirect::to('login');
   }
 
   function registro()

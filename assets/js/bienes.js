@@ -47,6 +47,51 @@
   });
   document.querySelector('[data-print-ci]')?.addEventListener('click', () => window.print());
 
+  document.querySelector('[data-print-inventory-report]')?.addEventListener('click', () => {
+    const sourceTable = document.querySelector('.bi-inventory-table');
+    const sourceBody = document.querySelector('#inventarioResultados');
+    const matchingRows = sourceBody ? [...sourceBody.querySelectorAll('tr')].filter(row =>
+      !row.hidden && getComputedStyle(row).display !== 'none' && !row.querySelector('[colspan]')
+    ) : [];
+    if (!sourceTable || matchingRows.length === 0) {
+      window.alert('No hay bienes que coincidan con los filtros actuales para imprimir.');
+      return;
+    }
+
+    const reportWindow = window.open('', '_blank');
+    if (!reportWindow) {
+      window.alert('Permite las ventanas emergentes para imprimir el reporte.');
+      return;
+    }
+    const reportDocument = reportWindow.document;
+    reportDocument.open();
+    reportDocument.write('<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Reporte de bienes</title><style>body{font:12px Arial,sans-serif;color:#161A1D;margin:20px}h1{font-size:20px;margin:0 0 4px}p{margin:0 0 16px;color:#555}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:6px;text-align:left;vertical-align:top}th{background:#eee} @page{size:landscape;margin:12mm} @media print{body{margin:0}}</style></head><body></body></html>');
+    reportDocument.close();
+
+    const title = reportDocument.createElement('h1');
+    title.textContent = 'Reporte de bienes';
+    reportDocument.body.append(title);
+    const description = reportDocument.createElement('p');
+    description.textContent = `${matchingRows.length} ${matchingRows.length === 1 ? 'bien' : 'bienes'} según los filtros actuales.`;
+    reportDocument.body.append(description);
+
+    const table = sourceTable.cloneNode(false);
+    const head = sourceTable.tHead?.cloneNode(true);
+    head?.rows[0]?.deleteCell(-1);
+    if (head) table.append(head);
+    const body = reportDocument.createElement('tbody');
+    matchingRows.forEach(row => {
+      const copy = row.cloneNode(true);
+      copy.deleteCell(-1);
+      body.append(copy);
+    });
+    table.append(body);
+    reportDocument.body.append(table);
+    reportWindow.addEventListener('afterprint', () => reportWindow.close(), { once: true });
+    reportWindow.focus();
+    reportWindow.print();
+  });
+
   const form = document.querySelector('#bienForm');
   if (!form) return;
 

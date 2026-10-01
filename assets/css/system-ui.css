@@ -125,15 +125,21 @@ textarea.form-control { min-height: 5rem; }
 }
 .bi-state-switch[aria-checked="true"] { background: #16834A !important; }
 .bi-state-switch[aria-checked="true"]::before { transform: translateX(.93rem); }
+.bi-unit-state-switch[aria-checked="false"] { background: #9AA0A6 !important; }
+.bi-unit-state-switch[aria-disabled="true"] { cursor: not-allowed; opacity: .58; }
 .bi-state-switch:focus-visible { outline: 3px solid var(--ui-focus) !important; outline-offset: 2px; }
 .bi-state-switch[aria-readonly="true"] { cursor: default; }
 .bi-state-switch:not([aria-readonly="true"]) { cursor: pointer; }
+.bi-qr-print-button, .bi-qr-print-button:hover, .bi-qr-print-button:focus-visible, .bi-qr-print-button:active { color: #161A1D !important; }
 .bi-icon-action {
   border: 1px solid transparent !important;
   border-radius: .45rem !important;
   background: transparent !important;
   box-shadow: none !important;
 }
+#usersTableBody .bi-icon-action { color: var(--ui-primary); }
+#usersTableBody .bi-icon-action .fa-floppy-disk,
+#usersTableBody .bi-icon-action .fa-save { color: #161A1D; }
 .bi-icon-action:hover, .bi-icon-action:focus-visible {
   border-color: transparent !important;
   background: rgba(109, 8, 8, .08) !important;

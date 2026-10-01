@@ -1,4 +1,5 @@
 {% include 'includes/admin/inventory-top.twig' %}
+<div id="usuariosNotifications" aria-live="polite"></div>
 <header class="bi-list-heading"><h1 class="h3 mb-1 bi-title">Todos los usuarios</h1><p class="text-muted mb-0">Consulta las cuentas y administra su estado y perfil.</p></header>
 <div class="bi-list-controls bi-list-controls--filters mb-4">
   <form class="bi-list-filter-form" id="usuariosFilters" method="get" action="{{ get_base_url() }}admin/usuarios">
@@ -7,34 +8,32 @@
   </form>
   <button class="btn bi-btn-primary bi-button-label" type="button" data-bs-toggle="modal" data-bs-target="#agregarUsuarioModal"><i class="fa-solid fa-user-plus me-1" aria-hidden="true"></i>Agregar usuario</button>
 </div>
-<div class="small mb-2" id="usuariosFeedback" role="status" aria-live="polite"></div>
 <section class="card shadow-sm border-0"><div class="card-header bg-white"><h2 class="h6 mb-0 bi-title">Cuentas registradas</h2></div><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Usuario</th><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead><tbody id="usersTableBody">
 {% include 'views/admin/usuarios/usuarios-rowsView.twig' with {users: users, current_user: current_user, user_roles: user_roles, csrf: csrf} %}
 </tbody></table></div><div class="card-body">{{ users.pagination|raw }}</div></section>
 
-<div class="modal fade bi-user-create-modal" id="agregarUsuarioModal" tabindex="-1" aria-labelledby="agregarUsuarioTitulo" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-centered"><form class="modal-content" method="post" action="{{ get_base_url() }}admin/post_usuarios" id="agregarUsuarioForm"><div class="modal-header"><h2 class="modal-title fs-5" id="agregarUsuarioTitulo">Agregar usuario</h2><button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button></div><div class="modal-body"><input type="hidden" name="csrf" value="{{ csrf }}"><div class="row g-3">
+<div class="modal fade bi-user-create-modal" id="agregarUsuarioModal" tabindex="-1" aria-labelledby="agregarUsuarioTitulo" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-centered"><form class="modal-content" method="post" action="{{ get_base_url() }}admin/post_usuarios" id="agregarUsuarioForm" novalidate><div class="modal-header"><h2 class="modal-title fs-5" id="agregarUsuarioTitulo">Agregar usuario</h2><button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button></div><div class="modal-body"><input type="hidden" name="csrf" value="{{ csrf }}"><div class="row g-3">
   <div class="col-md-6"><label class="form-label" for="newName">Nombre</label><input class="form-control" id="newName" name="nombre" maxlength="80" autocomplete="given-name" required></div>
   <div class="col-md-6"><label class="form-label" for="newPaternal">Apellido paterno</label><input class="form-control" id="newPaternal" name="apellido_paterno" maxlength="80" autocomplete="family-name" required></div>
   <div class="col-md-6"><label class="form-label" for="newMaternal">Apellido materno</label><input class="form-control" id="newMaternal" name="apellido_materno" maxlength="80" required></div>
-  <div class="col-md-6"><label class="form-label" for="newUsername">Usuario</label><input class="form-control" id="newUsername" name="username" minlength="5" maxlength="20" pattern="[A-Za-z0-9]{5,20}" autocomplete="username" required></div>
-  <div class="col-md-6"><label class="form-label" for="newPassword">Contraseña</label><input class="form-control" type="password" id="newPassword" name="password" minlength="5" maxlength="20" autocomplete="new-password" required></div>
+  <div class="col-md-6"><label class="form-label" for="newUsername">Usuario</label><input class="form-control" id="newUsername" value="" placeholder="Se genera con el nombre, iniciales y dos números" readonly aria-describedby="newUsernameHelp"><div class="form-text" id="newUsernameHelp">Vista previa. El identificador definitivo se genera y valida al guardar.</div></div>
+  <div class="col-12"><label class="form-label">Contraseña</label><div class="form-control bg-light text-muted" aria-readonly="true"><i class="fa-solid fa-lock me-2" aria-hidden="true"></i>Se generará automáticamente y se enviará al correo electrónico del usuario.</div></div>
   <div class="col-md-6"><label class="form-label" for="newEmail">Correo electrónico</label><input class="form-control" type="email" id="newEmail" name="email" maxlength="100" autocomplete="email" required></div>
   <div class="col-md-6"><label class="form-label" for="newPhone">Número de celular</label><input class="form-control" type="text" inputmode="numeric" id="newPhone" name="telefono" maxlength="15" pattern="([0-9]{7,15})?" autocomplete="tel-national"></div>
   <div class="col-md-6"><label class="form-label" for="newRole">Rol</label><select class="form-select" id="newRole" name="rol" required>{% for role in user_roles %}<option value="{{ role.slug }}" {{ role.slug == 'consultor' ? 'selected' : '' }}>{{ role.nombre }}</option>{% endfor %}</select></div>
 </div></div><div class="modal-footer"><button class="btn bi-btn-primary bi-modal-save" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>Guardar</button><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal"><i class="fa-solid fa-xmark" aria-hidden="true"></i>Cancelar</button></div></form></div></div>
 
 <div class="modal fade" id="editarUsuarioModal" tabindex="-1" aria-labelledby="editarUsuarioTitulo" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-centered"><form class="modal-content" method="post" id="editarUsuarioForm"><div class="modal-header"><h2 class="modal-title fs-5" id="editarUsuarioTitulo">Editar usuario</h2><button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button></div><div class="modal-body"><input type="hidden" name="csrf" value="{{ csrf }}"><div class="row g-3">
-  <div class="col-md-6"><label class="form-label" for="editUsername">Usuario</label><input class="form-control" id="editUsername" name="username" minlength="5" maxlength="20" required></div><div class="col-md-6"><label class="form-label" for="editEmail">Correo electrónico</label><input class="form-control" type="email" id="editEmail" name="email" maxlength="100" required></div>
+  <div class="col-md-6"><label class="form-label" for="editUsername">Usuario</label><input class="form-control" id="editUsername" readonly aria-readonly="true"></div><div class="col-md-6"><label class="form-label" for="editEmail">Correo electrónico</label><input class="form-control" type="email" id="editEmail" name="email" maxlength="100" required></div>
   <div class="col-md-6"><label class="form-label" for="editNombre">Nombre</label><input class="form-control" id="editNombre" name="nombre" maxlength="80" required></div><div class="col-md-6"><label class="form-label" for="editPaterno">Apellido paterno</label><input class="form-control" id="editPaterno" name="apellido_paterno" maxlength="80" required></div>
-  <div class="col-md-6"><label class="form-label" for="editMaterno">Apellido materno</label><input class="form-control" id="editMaterno" name="apellido_materno" maxlength="80" required></div><div class="col-md-6"><label class="form-label" for="editRole">Rol</label><select class="form-select" id="editRole" name="rol" required>{% for role in user_roles %}<option value="{{ role.slug }}">{{ role.nombre }}</option>{% endfor %}</select></div>
-  <div class="col-12"><div class="small" id="editarUsuarioFeedback" role="status" aria-live="polite"></div></div>
+  <div class="col-md-6"><label class="form-label" for="editMaterno">Apellido materno</label><input class="form-control" id="editMaterno" name="apellido_materno" maxlength="80" required></div><div class="col-md-6"><label class="form-label" for="editPhone">Número de celular</label><input class="form-control" type="text" inputmode="numeric" id="editPhone" name="telefono" maxlength="15" pattern="([0-9]{7,15})?" autocomplete="tel-national"></div>
+  <div class="col-md-6"><label class="form-label" for="editRole">Rol</label><select class="form-select" id="editRole" name="rol" required>{% for role in user_roles %}<option value="{{ role.slug }}">{{ role.nombre }}</option>{% endfor %}</select></div>
 </div></div><div class="modal-footer"><button class="btn bi-btn-primary" type="submit">Guardar cambios</button><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal" aria-label="Cancelar edición">Cancelar</button></div></form></div></div>
 
 <script>
 (() => {
   const base = '{{ get_base_url() }}';
   const body = document.getElementById('usersTableBody');
-  const feedback = document.getElementById('usuariosFeedback');
   const search = document.getElementById('usuariosQ');
   const status = document.getElementById('usuariosActivo');
   let timer;
@@ -52,51 +51,143 @@
       search.value ? url.searchParams.set('q', search.value) : url.searchParams.delete('q');
       status.value ? url.searchParams.set('activo', status.value) : url.searchParams.delete('activo');
       history.replaceState({}, '', url);
-    } catch (error) { if (error.name !== 'AbortError') feedback.textContent = error.message; }
+    } catch (error) { if (error.name !== 'AbortError') notifyBee('error', error.message); }
+  }
+  function notifyBee(type, message) {
+    if (window.toastr && typeof window.toastr[type] === 'function') window.toastr[type](message, type === 'success' ? '¡Excelente!' : type === 'warning' ? 'Aviso' : '¡Hubo un error!');
+  }
+  function safeCreateError(message) {
+    const known = [
+      'El correo electrónico ya está registrado.',
+      'El número de celular ya está registrado.',
+      'El correo electrónico ya está registrado por otro usuario.',
+      'El número de celular ya está registrado por otro usuario.',
+      'El usuario generado ya está registrado. Intenta nuevamente.'
+    ];
+    const reasons = known.filter(reason => String(message || '').includes(reason));
+    return reasons.length ? 'Usuario no agregado, verificar datos. ' + reasons.join(' ') : 'Usuario no agregado, verificar datos';
+  }
+  async function closeModalThenNotify(modalElement, type, message) {
+    if (modalElement.classList.contains('show')) {
+      const closed = new Promise(resolve => modalElement.addEventListener('hidden.bs.modal', resolve, {once: true}));
+      bootstrap.Modal.getOrCreateInstance(modalElement).hide();
+      await closed;
+    }
+    notifyBee(type, message);
+  }
+  function showBeeFlash(notificationHtml, fallbackMessage, type = 'danger') {
+    const host = document.getElementById('usuariosNotifications');
+    if (notificationHtml) {
+      host.innerHTML = notificationHtml;
+    } else {
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type} alert-dismissible show fade`;
+      alert.setAttribute('role', 'alert');
+      const icon = document.createElement('i');
+      icon.className = `fas ${type === 'success' ? 'fa-check' : type === 'warning' ? 'fa-triangle-exclamation' : 'fa-xmark'} flex-shrink-0 me-2`;
+      icon.setAttribute('aria-hidden', 'true');
+      alert.append(icon, document.createTextNode(fallbackMessage));
+      const dismiss = document.createElement('button');
+      dismiss.type = 'button'; dismiss.className = 'btn-close'; dismiss.setAttribute('data-bs-dismiss', 'alert'); dismiss.setAttribute('aria-label', 'Cerrar');
+      alert.append(dismiss);
+      host.replaceChildren(alert);
+    }
+    host.querySelector('[role="alert"]')?.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+  }
+  async function closeModalThenShowBeeFlash(modalElement, notificationHtml, fallbackMessage, type = 'danger') {
+    if (modalElement.classList.contains('show')) {
+      const closed = new Promise(resolve => modalElement.addEventListener('hidden.bs.modal', resolve, {once: true}));
+      bootstrap.Modal.getOrCreateInstance(modalElement).hide();
+      await closed;
+    }
+    showBeeFlash(notificationHtml, fallbackMessage, type);
+  }
+  async function checkDuplicateContacts(form, userId = '', includeNotification = false) {
+    const payload = new FormData(form);
+    payload.set('user_id', userId);
+    const response = await fetch(base + 'admin/validar_duplicados_usuario', {method: 'POST', body: payload, headers: {'X-Requested-With': 'XMLHttpRequest'}});
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      if (includeNotification) return result;
+      throw new Error(result.message || 'No se pudieron validar los datos de contacto.');
+    }
+    return includeNotification ? result : result.duplicates || [];
   }
   search.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(refreshUsers, 300); });
   status.addEventListener('change', refreshUsers);
   const createForm = document.getElementById('agregarUsuarioForm');
   const phone = document.getElementById('newPhone');
   phone.addEventListener('input', () => { phone.value = phone.value.replace(/\D/g, '').slice(0, 15); });
+  const newName = document.getElementById('newName');
+  const newPaternal = document.getElementById('newPaternal');
+  const newMaternal = document.getElementById('newMaternal');
+  const newUsername = document.getElementById('newUsername');
+  function updateUsernamePreview() {
+    const ascii = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '');
+    const first = ascii(newName.value).toLowerCase().slice(0, 16);
+    const initials = (ascii(newPaternal.value).slice(0, 1) + ascii(newMaternal.value).slice(0, 1)).toUpperCase();
+    newUsername.value = first && initials.length === 2 ? first + initials + String(Math.floor(Math.random() * 100)).padStart(2, '0') : '';
+  }
+  [newName, newPaternal, newMaternal].forEach(input => input.addEventListener('input', updateUsernamePreview));
   createForm.addEventListener('submit', async event => {
     event.preventDefault();
-    if (!createForm.reportValidity()) return;
+    if (!createForm.reportValidity()) {
+      await closeModalThenShowBeeFlash(document.getElementById('agregarUsuarioModal'), '', 'Usuario no agregado, verificar datos');
+      return;
+    }
     const button = createForm.querySelector('[type="submit"]'); button.disabled = true;
+    const modalElement = document.getElementById('agregarUsuarioModal');
     try {
+      const validation = await checkDuplicateContacts(createForm, '', true);
+      if (!validation.success || (validation.duplicates || []).length) {
+        await closeModalThenShowBeeFlash(modalElement, validation.notification_html || '', safeCreateError(validation.message || (validation.duplicates || []).join(' ')));
+        return;
+      }
       const response = await fetch(createForm.action, {method: 'POST', body: new FormData(createForm), headers: {'X-Requested-With': 'XMLHttpRequest'}});
       const data = await response.json();
-      if (!response.ok || !data.success) throw new Error(data.message || 'No se pudo crear el usuario.');
-      bootstrap.Modal.getOrCreateInstance(document.getElementById('agregarUsuarioModal')).hide();
-      createForm.reset(); feedback.textContent = data.message; feedback.className = 'small mb-2 text-success'; await refreshUsers();
-    } catch (error) { feedback.textContent = error.message; feedback.className = 'small mb-2 text-danger'; }
+      if (!response.ok || !data.success) {
+        await closeModalThenShowBeeFlash(modalElement, data.notification_html || '', safeCreateError(data.message));
+        return;
+      }
+      await closeModalThenShowBeeFlash(modalElement, data.notification_html || '', data.message || 'Usuario Agregado', data.email_sent === false ? 'warning' : 'success');
+      createForm.reset(); updateUsernamePreview(); await refreshUsers();
+    } catch (error) { await closeModalThenShowBeeFlash(modalElement, '', safeCreateError(error.message)); }
     finally { button.disabled = false; }
   });
   const editForm = document.getElementById('editarUsuarioForm');
-  const editFeedback = document.getElementById('editarUsuarioFeedback');
+  const editPhone = document.getElementById('editPhone');
+  editPhone.addEventListener('input', () => { editPhone.value = editPhone.value.replace(/\D/g, '').slice(0, 15); });
+  let editingUserId = '';
   document.getElementById('editarUsuarioModal')?.addEventListener('show.bs.modal', function (event) {
     const button = event.relatedTarget;
-    editForm.action = base + 'admin/actualizar_usuario/' + button.dataset.userId;
+    editingUserId = button.dataset.userId || '';
+    editForm.action = base + 'admin/actualizar_usuario/' + editingUserId;
     document.getElementById('editNombre').value = button.dataset.userFirst || '';
     document.getElementById('editPaterno').value = button.dataset.userPaternal || '';
     document.getElementById('editMaterno').value = button.dataset.userMaternal || '';
     document.getElementById('editUsername').value = button.dataset.userLogin || '';
     document.getElementById('editEmail').value = button.dataset.userEmail || '';
+    editPhone.value = button.dataset.userPhone || '';
     document.getElementById('editRole').value = button.dataset.userRole || '';
-    editFeedback.textContent = '';
   });
   editForm.addEventListener('submit', async event => {
     event.preventDefault();
     if (!editForm.reportValidity()) return;
     if (!window.confirm('¿Deseas guardar los cambios realizados a este usuario?')) return;
     const button = editForm.querySelector('[type="submit"]'); button.disabled = true;
+    const modalElement = document.getElementById('editarUsuarioModal');
     try {
+      const duplicates = await checkDuplicateContacts(editForm, editingUserId);
+      if (duplicates.length) {
+        await closeModalThenNotify(modalElement, 'error', duplicates.join(' '));
+        return;
+      }
       const response = await fetch(editForm.action, {method: 'POST', body: new FormData(editForm), headers: {'X-Requested-With': 'XMLHttpRequest'}});
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.message || 'No se pudieron guardar los cambios.');
-      bootstrap.Modal.getOrCreateInstance(document.getElementById('editarUsuarioModal')).hide();
-      feedback.textContent = result.message; feedback.className = 'small mb-2 text-success'; await refreshUsers();
-    } catch (error) { editFeedback.textContent = error.message; editFeedback.className = 'small mt-3 text-danger'; }
+      await closeModalThenNotify(modalElement, 'success', result.message);
+      await refreshUsers();
+    } catch (error) { await closeModalThenNotify(modalElement, 'error', error.message); }
     finally { button.disabled = false; }
   });
 })();
