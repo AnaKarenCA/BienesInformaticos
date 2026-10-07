@@ -1,0 +1,56 @@
+{% for item in resguardantes %}
+<tr class="resguardo-row" data-id="{{ item.id_resguardante }}">
+  <td class="resguardo-cell-person">
+    <strong class="d-block resguardo-person-name">{{ item.nombre_completo|title }}</strong>
+    <span class="resguardo-person-csp text-muted small d-inline-block mt-1">CSP: {{ item.csp }}</span>
+  </td>
+  <td class="resguardo-cell-unit">
+    <strong class="d-block resguardo-unit-name">{{ item.unidad_nombre|default('Sin unidad registrada')|title }}</strong>
+    <span class="resguardo-unit-code text-muted small d-inline-block mt-1">{{ item.unidad_codigo_ua ? 'Código: ' ~ item.unidad_codigo_ua : 'Sin código UA' }}</span>
+  </td>
+  <td class="resguardo-cell-count text-nowrap">
+    <strong class="resguardo-goods-qty">{{ item.bienes_asignados }}</strong>
+    <span class="resguardo-goods-label text-muted small ms-1">{{ item.bienes_asignados == 1 ? 'bien' : 'bienes' }}</span>
+  </td>
+  <td class="resguardo-cell-date text-nowrap">
+    {{ item.ultima_asignacion ? item.ultima_asignacion|date('d/m/Y') : '—' }}
+  </td>
+  <td class="resguardo-cell-status">
+    {% include 'includes/components/status-badge.twig' with { active: item.activo } only %}
+  </td>
+  <td class="resguardo-cell-actions text-end text-nowrap">
+    <a class="btn btn-sm bi-button-label resguardo-action-btn"
+       href="{{ get_base_url() }}resguardos/detalle/{{ item.id_resguardante }}"
+       aria-label="Ver resguardo de {{ item.nombre_completo|e }}"
+       title="Ver resguardo"
+       data-bs-toggle="tooltip"
+       data-bs-placement="top">
+      <i class="fa-solid fa-eye me-1" aria-hidden="true"></i>
+      <span>Ver resguardo</span>
+    </a>
+  </td>
+</tr>
+{% else %}
+<tr>
+  <td colspan="6" class="text-center py-5">
+    <div class="bi-empty-state">
+      {% if filtros.q is defined and filtros.q != '' %}
+        <i class="fa-solid fa-magnifying-glass fs-2 text-muted mb-2" aria-hidden="true"></i>
+        <h3 class="h6 mb-1 text-dark">No se encontraron resguardantes</h3>
+        <p class="text-muted small mb-3">No hay servidores públicos que coincidan con "{{ filtros.q }}" para el estado seleccionado.</p>
+        <button type="button" class="btn btn-sm btn-outline-secondary bi-button-label" data-reset-filters>
+          <i class="fa-solid fa-rotate-left me-1" aria-hidden="true"></i>Restablecer filtros
+        </button>
+      {% elseif filtros.estado == '0' %}
+        <i class="fa-solid fa-clipboard-user fs-2 text-muted mb-2" aria-hidden="true"></i>
+        <h3 class="h6 mb-1 text-dark">No hay resguardantes inactivos</h3>
+        <p class="text-muted small mb-0">No se encontraron resguardantes inactivos registrados en el sistema.</p>
+      {% else %}
+        <i class="fa-solid fa-clipboard-user fs-2 text-muted mb-2" aria-hidden="true"></i>
+        <h3 class="h6 mb-1 text-dark">No hay resguardantes registrados</h3>
+        <p class="text-muted small mb-0">No se encontraron resguardantes registrados para el filtro seleccionado.</p>
+      {% endif %}
+    </div>
+  </td>
+</tr>
+{% endfor %}

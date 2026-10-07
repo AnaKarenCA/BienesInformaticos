@@ -1,0 +1,92 @@
+{% include 'includes/admin/inventory-top.twig' %}
+<div class="bi-identify-view">
+<header class="bi-identify-heading mb-4">
+  <h1 class="h3 bi-title mb-1">Identificar bien</h1>
+  <p class="text-muted mb-0">Escanea el código QR del bien o búscalo con uno de sus identificadores.</p>
+</header>
+
+<section class="card shadow-sm border-0 mb-4 bi-identify-card" aria-labelledby="scanHeading">
+  <div class="card-body p-3 p-md-4">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+      <div>
+        <h2 class="h5 mb-1" id="scanHeading">Escanear código QR</h2>
+        <p class="text-muted mb-0">Apunta la cámara al código para abrir la ficha del bien.</p>
+      </div>
+      <button class="btn bi-btn-primary bi-identify-scan-button" type="button" id="usarCamara" title="Escanear código QR" aria-label="Escanear código QR">
+        <svg class="bi-identify-camera-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M4 7.5h3l1.6-2h6.8l1.6 2h3A1.5 1.5 0 0 1 21.5 9v9a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 18V9A1.5 1.5 0 0 1 4 7.5Z" />
+          <circle cx="12" cy="13" r="3.5" />
+        </svg>
+        <span>Escanear código QR</span>
+      </button>
+    </div>
+    <div id="cameraPanel" class="bi-camera-panel d-none mt-4" aria-live="polite">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <p class="mb-0" id="cameraStatus" role="status" aria-live="polite"></p>
+        <button class="btn btn-outline-secondary d-none" type="button" id="cerrarCamara" title="Detener escaneo" aria-label="Detener escaneo">
+          <svg class="bi-identify-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="6" width="12" height="12" rx="1.5" /></svg><span>Detener escaneo</span>
+        </button>
+      </div>
+      <div class="bi-camera-frame d-none" id="cameraFrame">
+        <video id="cameraVideo" autoplay muted playsinline aria-label="Vista de la cámara para escanear el código QR"></video>
+        <span class="bi-camera-guide" aria-hidden="true"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="bi-identify-divider mb-4" aria-hidden="true"><span>o</span></div>
+
+<section class="card shadow-sm border-0 mb-4" aria-labelledby="manualHeading">
+  <div class="card-body p-3 p-md-4">
+    <h2 class="h5 mb-1" id="manualHeading">Buscar por identificador</h2>
+    <p class="text-muted mb-3">Ingresa la Clave Interna, el número de inventario de Control Interno, NIC/CEA o número de serie.</p>
+    <form method="get" action="{{ get_base_url() }}identificar" id="identificarForm">
+      <label class="form-label" for="identInput">Identificador del bien</label>
+      <div class="input-group input-group-lg bi-identify-search-group">
+        <input class="form-control" id="identInput" name="q" value="{{ consulta|default('') }}" placeholder="CI, inventario, NIC/CEA o número de serie" autocomplete="off" minlength="3" required>
+        <button class="btn btn-outline-primary bi-identify-search-button" type="submit" title="Buscar bien" aria-label="Buscar bien"><svg class="bi-identify-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.8" cy="10.8" r="6.2" /><path d="m15.4 15.4 5 5" /></svg><span>Buscar bien</span></button>
+      </div>
+      <small class="form-text">Puedes ingresar cualquiera de los identificadores del bien.</small>
+    </form>
+  </div>
+</section>
+
+{% if error_qr|default('') %}
+  <div class="alert alert-warning" role="alert">{{ error_qr }}</div>
+{% endif %}
+{% if busqueda_corta|default(false) %}
+  <div class="alert alert-info" role="status">Escribe al menos 3 caracteres para buscar el identificador.</div>
+{% elseif consulta and coincidencias|length == 0 %}
+  <div class="alert alert-warning" role="status">
+    <strong>No encontramos un bien con ese identificador.</strong>
+    <span class="d-block">Verifica la Clave Interna, el número de inventario de Control Interno, NIC/CEA o número de serie.</span>
+  </div>
+{% elseif coincidencias|length > 0 %}
+  <section class="card shadow-sm border-0 mb-4" aria-labelledby="matchesHeading">
+    <div class="card-header bg-white"><strong id="matchesHeading">{{ coincidencias|length == 1 ? 'Confirma que este sea el bien correcto' : 'Selecciona el bien correcto' }}</strong>{% if coincidencias|length == 20 %}<small class="d-block text-muted">Se muestran hasta 20 coincidencias. Refina el identificador para acotar los resultados.</small>{% endif %}</div>
+    <div class="list-group list-group-flush">
+      {% for item in coincidencias %}
+        <article class="list-group-item d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+          <div class="min-w-0">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+              <h3 class="h6 mb-0">{{ item.nombre_bien|title }}</h3>
+              {% include 'includes/components/status-badge.twig' with { active: item.activo } only %}
+            </div>
+            <div class="bi-identify-result-grid">
+              <span><small>Clave Interna</small><strong>{{ item.clave_interna|default('—') }}</strong></span>
+              <span><small>Número de inventario de Control Interno</small><strong>{{ item.numero_inventario|default('—') }}</strong></span>
+              <span><small>NIC/CEA</small><strong>{{ item.nic_cea|default('—') }}</strong></span>
+              <span><small>Número de serie</small><strong>{{ item.numero_serie|default('—') }}</strong></span>
+            </div>
+          </div>
+          <a class="btn btn-outline-primary flex-shrink-0" href="{{ get_base_url() }}bienes/detalle/{{ item.id_bien }}" aria-label="Ver información de {{ item.nombre_bien|e }}" title="Ver información">
+            <svg class="bi-identify-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 4h6v6M20 4l-9 9" /><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5" /></svg><span>Ver información</span>
+          </a>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+{% endif %}
+</div>
+{% include 'includes/admin/inventory-bottom.twig' %}

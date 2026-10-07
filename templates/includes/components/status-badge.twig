@@ -1,0 +1,9 @@
+{#
+  Presentación no editable para estados booleanos.
+  Uso: include con `active` y, si aplica, `active_label` / `inactive_label`.
+#}
+{% set is_active = active|default(false) %}
+<span class="bi-status-badge {{ is_active ? 'bi-status-badge--active' : 'bi-status-badge--inactive' }}">
+  <i class="fa-solid {{ is_active ? 'fa-circle-check' : 'fa-circle-minus' }} bi-status-badge__icon" aria-hidden="true"></i>
+  <span>{{ is_active ? active_label|default('Activo') : inactive_label|default('Inactivo') }}</span>
+</span>

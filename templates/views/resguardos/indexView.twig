@@ -1,0 +1,61 @@
+{% include 'includes/admin/inventory-top.twig' %}
+<header class="bi-list-heading mb-4">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div>
+      <h1 class="h3 bi-title mb-1">Resguardos</h1>
+      <p class="text-muted mb-0">Consulta los servidores públicos, sus bienes asignados y el resguardo vigente.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge text-bg-light border px-3 py-2 fs-6 fw-semibold" id="resguardosTotalBadge" data-resguardo-count>
+        {{ resguardantes|length }} {{ resguardantes|length == 1 ? 'resguardante' : 'resguardantes' }}
+      </span>
+    </div>
+  </div>
+</header>
+
+<div class="bi-list-controls bi-list-controls--filters mb-4">
+  <form class="bi-list-filter-form" method="get" id="resguardosFiltros" action="{{ get_base_url() }}resguardos" role="search">
+    <div class="catalog-global-search position-relative">
+      <label class="visually-hidden" for="buscarResguardos">Buscar por CSP, nombre o unidad administrativa</label>
+      <input class="form-control ps-4"
+             type="search"
+             id="buscarResguardos"
+             name="q"
+             value="{{ filtros.q|default('') }}"
+             placeholder="Buscar por CSP, nombre o unidad administrativa..."
+             autocomplete="off">
+      <i class="fa-solid fa-magnifying-glass position-absolute text-muted"
+         style="left: .85rem; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: .88rem;"
+         aria-hidden="true"></i>
+    </div>
+    <div class="bi-list-filter-select d-flex align-items-center gap-2">
+      <label class="form-label mb-0 text-muted small text-nowrap fw-semibold" for="filtroEstadoResguardos">Estado:</label>
+      <select class="form-select" id="filtroEstadoResguardos" name="estado" aria-label="Filtrar por estado del resguardante">
+        <option value="1" {{ filtros.estado == '1' ? 'selected' : '' }}>Activos</option>
+        <option value="0" {{ filtros.estado == '0' ? 'selected' : '' }}>Inactivos</option>
+        <option value="" {{ filtros.estado == '' ? 'selected' : '' }}>Todos</option>
+      </select>
+    </div>
+  </form>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0 bi-resguardos-table" id="tablaResguardos" aria-label="Listado de resguardos por servidor público">
+      <thead>
+        <tr>
+          <th scope="col" style="min-width: 220px;">Resguardante</th>
+          <th scope="col" style="min-width: 250px;">Unidad administrativa</th>
+          <th scope="col" style="min-width: 130px;">Bienes bajo resguardo</th>
+          <th scope="col" style="min-width: 130px;">Última asignación</th>
+          <th scope="col" style="min-width: 110px;">Estado</th>
+          <th scope="col" class="text-end" style="min-width: 140px;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="resguardosResultados" data-resguardo-list>
+        {% include 'views/resguardos/_resguardo-rows.twig' %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include 'includes/admin/inventory-bottom.twig' %}

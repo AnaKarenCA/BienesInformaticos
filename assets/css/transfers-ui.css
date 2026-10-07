@@ -1,0 +1,62 @@
+/* Experiencia del módulo de traspasos: estilos acotados para no afectar otros formularios. */
+.transfer-page { --transfer-red: #CB2027; --transfer-wine: #8A1C1C; --transfer-border: #D9DEE3; --transfer-muted: #66717A; }
+.transfer-page .transfer-header { padding-bottom: 1.25rem; border-bottom: 1px solid var(--transfer-border); }
+.transfer-page .transfer-filter-card, .transfer-page .transfer-form-card { border: 1px solid var(--transfer-border) !important; border-radius: .8rem; box-shadow: 0 .2rem .7rem rgba(22,26,29,.055) !important; }
+.transfer-page .transfer-filter-card .card-header { background: #fff; border-bottom: 1px solid #EEF0F2; }
+.transfer-page .transfer-filter-actions { display: flex; flex-wrap: wrap; gap: .65rem; justify-content: flex-end; }
+.transfer-page .transfer-search { position: relative; }
+.transfer-page .transfer-search > i { position: absolute; z-index: 1; top: 50%; left: .85rem; color: var(--transfer-muted); transform: translateY(-50%); }
+.transfer-page .transfer-search .form-control { min-height: 2.75rem; padding-left: 2.55rem; border-color: #AEB7BF; }
+.transfer-page .transfer-autocomplete { position: relative; }
+.transfer-page .transfer-results { position: absolute; z-index: 30; top: calc(100% + .3rem); right: 0; left: 0; max-height: 17rem; overflow: auto; border: 1px solid #B8C1C8; border-radius: .55rem; background: #fff; box-shadow: 0 .65rem 1.4rem rgba(22,26,29,.16); }
+.transfer-page .transfer-results[hidden] { display: none !important; }
+.transfer-page .transfer-result { display: block; width: 100%; padding: .7rem .8rem; border: 0; border-bottom: 1px solid #EEF0F2; color: #161A1D; background: #fff; text-align: left; }
+.transfer-page .transfer-result:last-child { border-bottom: 0; }
+.transfer-page .transfer-result:hover, .transfer-page .transfer-result:focus-visible, .transfer-page .transfer-result.is-active { background: #FFF5F5; outline: 0; }
+.transfer-page .transfer-result strong, .transfer-page .transfer-result small { display: block; }
+.transfer-page .transfer-result small { margin-top: .12rem; color: var(--transfer-muted); }
+.transfer-page .transfer-selection { display: flex; align-items: flex-start; justify-content: space-between; gap: .65rem; margin-top: .55rem; padding: .65rem .75rem; border: 1px solid #E6BFC1; border-radius: .5rem; color: #571216; background: #FFF7F7; }
+.transfer-page .transfer-selection[hidden] { display: none; }
+.transfer-page .transfer-selection strong, .transfer-page .transfer-selection small { display: block; }
+.transfer-page .transfer-selection small { color: #6F5456; }
+.transfer-page .transfer-clear { min-width: 2rem; min-height: 2rem; padding: .2rem; border: 1px solid #B86468; border-radius: .35rem; color: #70171B; background: #fff; }
+.transfer-page .transfer-stepper { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .65rem; margin: 0 0 1.75rem; padding: 0; list-style: none; }
+.transfer-page .transfer-step { position: relative; display: flex; min-width: 0; flex-direction: column; align-items: center; color: #697177; font-weight: 700; text-align: center; }
+.transfer-page .transfer-step:not(:last-child)::after { position: absolute; z-index: 0; top: 1.1rem; right: calc(-50% - .65rem); left: 50%; height: 2px; background: #D7DDE1; content: ''; }
+.transfer-page .transfer-step__number { position: relative; z-index: 1; display: grid; width: 2.2rem; height: 2.2rem; flex: 0 0 2.2rem; place-items: center; border: 2px solid #B7C0C6; border-radius: 50%; color: #697177; background: #fff; }
+.transfer-page .transfer-step__label { display: block; margin-top: .5rem; line-height: 1.25; }
+.transfer-page .transfer-step.is-current { color: #79191D; }
+.transfer-page .transfer-step.is-current .transfer-step__number { border-color: var(--transfer-red); color: #fff; background: var(--transfer-red); }
+.transfer-page .transfer-step.is-complete { color: #426142; }
+.transfer-page .transfer-step.is-complete .transfer-step__number { border-color: #527D52; color: #fff; background: #527D52; }
+.transfer-page .transfer-step.is-complete:not(:last-child)::after { background: #527D52; }
+.transfer-page .transfer-feedback { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+.transfer-page .transfer-feedback[hidden] { display: none; }
+.transfer-page .transfer-feedback__close { display: inline-grid; width: 2rem; min-width: 2rem; height: 2rem; margin: -.25rem -.15rem -.25rem 0; place-items: center; border: 1px solid currentColor; border-radius: .3rem; color: inherit; background: transparent; font-size: 1.05rem; line-height: 1; }
+.transfer-page .transfer-feedback__close:focus-visible { outline: 3px solid #161A1D; outline-offset: 2px; }
+.transfer-page .transfer-kind { position: relative; display: block; height: 100%; cursor: pointer; }
+.transfer-page .transfer-kind input { position: absolute; opacity: 0; pointer-events: none; }
+.transfer-page .transfer-kind__card { display: block; min-height: 9.5rem; padding: 1rem; border: 2px solid #D6DCE0; border-radius: .7rem; background: #fff; transition: border-color .14s ease, background-color .14s ease, box-shadow .14s ease; }
+.transfer-page .transfer-kind:hover .transfer-kind__card { border-color: #A8B1B8; background: #FCFCFC; }
+.transfer-page .transfer-kind input:checked + .transfer-kind__card { border-color: var(--transfer-red); background: #FFF7F7; box-shadow: 0 0 0 .16rem rgba(203,32,39,.13); }
+.transfer-page .transfer-kind input:focus-visible + .transfer-kind__card { outline: 3px solid #161A1D; outline-offset: 2px; }
+.transfer-page .transfer-kind__icon { display: inline-grid; width: 2.3rem; height: 2.3rem; place-items: center; border-radius: .45rem; color: #7B171B; background: #F8E5E6; }
+.transfer-page .transfer-kind__card strong, .transfer-page .transfer-kind__card small { display: block; }
+.transfer-page .transfer-kind__card small { margin-top: .45rem; color: var(--transfer-muted); line-height: 1.45; }
+.transfer-page .transfer-search-card { padding: .85rem; border: 1px solid #DCE1E5; border-radius: .7rem; background: #FAFBFC; box-shadow: 0 .25rem .7rem rgba(22,26,29,.05); }
+.transfer-page .transfer-search-card .form-control { min-height: 2.8rem; border-color: #9EA8B1; }
+.transfer-page .transfer-goods-table .form-check-input { width: 1.3rem; height: 1.3rem; margin: 0; border: 2px solid #64717A; cursor: pointer; }
+.transfer-page .transfer-goods-table tr[data-transfer-row] { cursor: pointer; }
+.transfer-page .transfer-goods-table tr[data-transfer-row].is-selected > * { background: #FFF7F7; }
+.transfer-page .transfer-location-label { display: block; margin-bottom: .2rem; color: var(--transfer-muted); font-size: .72rem; font-weight: 700; text-transform: uppercase; }
+.transfer-page .transfer-file-preview { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .8rem; align-items: start; margin-top: .7rem; padding: .8rem; border: 1px solid #D7DDE1; border-radius: .55rem; background: #FAFBFC; }
+.transfer-page .transfer-file-preview[hidden] { display: none; }
+.transfer-page .transfer-file-preview__media { width: 100%; max-height: 15rem; border: 1px solid #D7DDE1; border-radius: .35rem; background: #fff; object-fit: contain; }
+.transfer-page .transfer-file-preview__meta strong, .transfer-page .transfer-file-preview__meta small { display: block; overflow-wrap: anywhere; }
+.transfer-page .transfer-review-card { height: 100%; padding: .9rem; border: 1px solid #E0E4E7; border-radius: .55rem; background: #fff; }
+.transfer-page .transfer-review-card small { display: block; margin-bottom: .2rem; color: var(--transfer-muted); font-weight: 700; text-transform: uppercase; }
+.transfer-page .transfer-status { display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .55rem; border-radius: 999px; font-size: .78rem; font-weight: 750; white-space: nowrap; }
+.transfer-page .transfer-status::before { content: '●'; font-size: .62rem; }
+.transfer-page .transfer-status--pending { color: #754A00; background: #FFF3CD; }.transfer-page .transfer-status--process { color: #055160; background: #CFF4FC; }.transfer-page .transfer-status--done { color: #0F5132; background: #D1E7DD; }.transfer-page .transfer-status--danger { color: #842029; background: #F8D7DA; }.transfer-page .transfer-status--neutral { color: #41464B; background: #E2E3E5; }
+@media (max-width: 767.98px) { .transfer-page .transfer-stepper { grid-template-columns: 1fr 1fr; } .transfer-page .transfer-step:not(:last-child)::after { display: none; } .transfer-page .transfer-filter-actions { justify-content: stretch; } .transfer-page .transfer-filter-actions .btn { flex: 1 1 12rem; } }
+@media (max-width: 575.98px) { .transfer-page .transfer-stepper { grid-template-columns: 1fr; gap: .35rem; } .transfer-page .transfer-step { padding: .35rem 0; } .transfer-page .transfer-kind__card { min-height: auto; } .transfer-page .transfer-file-preview { grid-template-columns: 1fr; } }

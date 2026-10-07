@@ -1,0 +1,60 @@
+{% set customBreadcrumb = true %}
+{% include 'includes/admin/inventory-top.twig' %}
+<header class="bi-form-context bi-detail-context" aria-labelledby="bienDetailTitle">
+  <nav class="bi-breadcrumbs" aria-label="Ruta de navegación"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{{ get_base_url() }}admin">Inicio</a></li><li class="breadcrumb-item"><a href="{{ get_base_url() }}bienes">Bienes</a></li><li class="breadcrumb-item active" aria-current="page">Detalle</li></ol></nav>
+  <div class="bi-detail-context__main"><div class="bi-form-context__copy"><h1 class="h3 bi-title" id="bienDetailTitle">{{ bien.nombre_bien|title }}</h1><p class="text-muted mb-0"><span>{{ bien.clave_interna|default('Sin CI') }}</span><span class="mx-1" aria-hidden="true">·</span><span>Inventario {{ bien.numero_inventario|default('Sin número') }}</span></p></div>
+    <div class="bi-detail-toolbar">
+      <div class="bi-detail-navigation">
+        <a class="btn bi-detail-action bi-detail-back" href="{{ get_base_url() }}bienes" title="Regresar" aria-label="Regresar"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Regresar</span></a>
+      </div>
+      <nav class="bi-detail-actions" aria-label="Acciones del bien">
+      {% if can_update_goods|default(false) %}<a class="btn bi-detail-action" href="{{ get_base_url() }}bienes/editar/{{ bien.id_bien }}" title="Editar Bien" aria-label="Editar Bien"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Editar Bien</span></a>{% endif %}
+      {% if codigo_qr.codigo %}<button class="btn bi-detail-action" type="button" data-bs-toggle="modal" data-bs-target="#codigoQrDetalleModal" title="Código QR" aria-label="Código QR"><i class="fa-solid fa-qrcode" aria-hidden="true"></i><span>Código QR</span></button>{% endif %}
+      </nav>
+    </div>
+  </div>
+</header>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2"><strong>Identificación y clasificación</strong>{% include 'includes/components/status-badge.twig' with { active: bien.activo } only %}</div><div class="card-body bi-detail-grid">
+      <div><small>Clave interna</small><strong>{{ bien.clave_interna|default('—') }}</strong></div>
+      <div><small>Número de inventario</small><strong>{{ bien.numero_inventario|default('—') }}</strong></div>
+      <div><small>NIC / CEA</small><strong>{{ bien.nic_cea|default('—') }}</strong></div>
+      <div><small>Activo genérico</small><strong>{{ bien.activo_generico_nombre|default('—') }}</strong></div>
+      <div><small>Grupo del activo</small><strong>{{ bien.grupo_nombre|default('—') }}</strong></div>
+      <div><small>Activo específico</small><strong>{{ bien.activo_especifico_nombre|default('—') }}</strong></div>
+      <div><small>Nombre del bien</small><strong>{{ bien.nombre_bien|default('—') }}</strong></div>
+    </div></div>
+
+    <div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white"><strong>Características</strong></div><div class="card-body bi-detail-grid">
+      <div><small>Material</small><strong>{{ bien.material_nombre|default(bien.material|default('—')) }}</strong></div>
+      <div><small>Marca</small><strong>{{ bien.marca_nombre|default('—')|upper }}</strong></div>
+      <div><small>Modelo</small><strong>{{ bien.modelo_nombre|default('—') }}</strong></div>
+      <div><small>Color</small><strong>{{ bien.color_nombre|default(bien.color|default('—')) }}</strong></div>
+      <div><small>Estado de uso</small><strong>{{ bien.estado_nombre|default('—') }}</strong></div>
+      <div><small>Serie</small><strong>{{ bien.numero_serie|default('—') }}</strong></div>
+      <div><small>Fecha de alta</small><strong>{{ bien.fecha_alta ? bien.fecha_alta|date('d/m/Y') : '—' }}</strong></div>
+      <div><small>Fecha de registro</small><strong>{{ bien.fecha_registro ? bien.fecha_registro|date('d/m/Y H:i') : '—' }}</strong></div>
+      <div><small>Fecha de adquisición</small><strong>{{ bien.fecha_adquisicion ? bien.fecha_adquisicion|date('d/m/Y') : '—' }}</strong></div>
+      <div><small>Fecha de elaboración</small><strong>{{ bien.fecha_elaboracion ? bien.fecha_elaboracion|date('d/m/Y') : '—' }}</strong></div>
+      <div><small>Fecha de asignación</small><strong>{{ bien.fecha_asignacion_actual ? bien.fecha_asignacion_actual|date('d/m/Y') : (bien.fecha_asignacion ? bien.fecha_asignacion|date('d/m/Y') : '—') }}</strong></div>
+      <div><small>Valor</small><strong>{% if bien.valor is not null and bien.valor != '' %}${{ bien.valor|number_format(2, '.', ',') }} MXN{% else %}—{% endif %}</strong></div>
+      <div><small>Resguardante</small>{% if bien.resguardante_nombre %}<strong class="d-block">{{ bien.resguardante_csp|default('CSP no capturado') }}</strong><small>{{ bien.resguardante_nombre|title }}</small>{% else %}<strong>Sin Asignar</strong>{% endif %}</div>
+    </div><div class="card-body border-top"><small>Características</small><p class="mb-3">{{ bien.caracteristicas|default('S/C', true) }}</p><small>Observaciones</small><p class="mb-0">{{ bien.observaciones|default('—', true) }}</p></div></div>
+
+    <div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white"><strong>Administración y ubicación</strong></div><div class="card-body bi-detail-grid">
+      {% for nivel in bien.jerarquia_administrativa.niveles_detalle|default([]) %}<div><small>{{ nivel.etiqueta }}</small><strong>{% if nivel.nombre %}{% if nivel.codigo_ua %}{{ nivel.codigo_ua }} · {% endif %}{{ nivel.nombre }}{% else %}—{% endif %}</strong></div>{% else %}<div class="col-12"><span class="text-muted">No hay niveles administrativos disponibles para la unidad asignada.</span></div>{% endfor %}
+      <div><small>Municipio</small><strong>{{ bien.municipio|default('—') }}</strong></div>
+      <div><small>Localidad</small><strong>{{ bien.localidad|default('—') }}</strong></div>
+    </div><div class="card-body border-top"><h2 class="h6 mb-3">Ubicación física del bien</h2><div class="bi-detail-grid"><div><small>PISO</small><strong>{{ bien.piso|default('—') }}</strong></div><div><small>SECCIÓN/ALA</small><strong>{{ bien.seccion_ala|default('—') }}</strong></div><div><small>CUBÍCULO</small><strong>{{ bien.cubiculo|default('—') }}</strong></div></div></div></div>
+  </div>
+</div>
+
+{% if codigo_qr.data_uri %}<div class="modal fade" id="codigoQrDetalleModal" tabindex="-1" aria-labelledby="codigoQrDetalleTitulo" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content qr-print-area"><div class="modal-header no-print"><h2 class="modal-title fs-5" id="codigoQrDetalleTitulo">Código QR</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar" title="Cerrar"></button></div><div class="modal-body text-center p-4"><p class="mb-1 fw-semibold">{{ bien.nombre_bien|title }}</p><img class="bi-qr-image" src="{{ codigo_qr.data_uri }}" alt="Código QR para abrir el detalle de {{ bien.nombre_bien|e }}"><strong class="d-block mt-2 qr-value">{{ bien.clave_interna|default('—') }}</strong><small class="text-muted">Número de inventario de Control Interno: {{ bien.numero_inventario|default('—') }}</small></div><div class="modal-footer no-print"><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal" title="Cerrar" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div></div></div></div>{% endif %}
+
+<div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white"><strong>Componentes</strong></div><div class="table-responsive"><table class="table table-striped mb-0 bi-components-table"><thead class="table-light"><tr><th>Componente</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Inventario / CI</th></tr></thead><tbody>{% for componente in bien.componentes %}<tr><td>{{ componente.tipo_componente }}</td><td>{{ componente.marca|default('N/A', true)|upper }}</td><td>{{ componente.modelo|default('N/A', true) }}</td><td>{{ componente.numero_serie|default('N/A', true) }}</td><td>{{ componente.numero_inventario|default('N/A', true) }}</td></tr>{% else %}<tr><td colspan="5" class="text-center text-muted py-3">No hay componentes registrados.</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white"><strong>Historial de resguardos y bajas</strong></div><div class="card-body">{% for registro in bien.historial_resguardos %}<article class="bi-history-entry"><div class="d-flex flex-wrap justify-content-between gap-2"><strong>{{ registro.fecha_baja ? 'Baja de resguardo' : (registro.resguardo_activo ? 'Resguardo vigente' : 'Resguardo concluido') }}</strong><span class="text-muted">{{ registro.fecha_baja ? registro.fecha_baja|date('d/m/Y') : (registro.fecha_devolucion ? registro.fecha_devolucion|date('d/m/Y') : (registro.fecha_asignacion ? registro.fecha_asignacion|date('d/m/Y') : '—')) }}</span></div><p class="mb-1">{{ registro.resguardante_nombre|default('Resguardante no disponible')|title }}{% if registro.csp %} · C.S.P. {{ registro.csp }}{% endif %}</p>{% if registro.motivo_baja %}<small class="d-block">Motivo: {{ registro.motivo_baja }}</small>{% endif %}{% if registro.observaciones_baja %}<small class="d-block text-muted">{{ registro.observaciones_baja }}</small>{% endif %}</article>{% else %}<p class="text-muted mb-0">No hay historial de resguardos o bajas para este bien.</p>{% endfor %}</div></div>
+<div class="card shadow-sm border-0 mb-4"><div class="card-header bg-white"><strong>Traspasos</strong></div><div class="card-body">{% for traspaso in bien.traspasos %}<article class="bi-history-entry"><div class="d-flex flex-wrap justify-content-between gap-2"><strong>{{ traspaso.folio }}</strong><span class="badge text-bg-light">{{ traspaso.estado|replace({'_':' '})|title }}</span></div><p class="mb-1">{{ traspaso.unidad_origen_nombre|default('Unidad de origen no disponible') }} <span aria-hidden="true">→</span> {{ traspaso.unidad_destino_nombre|default('Unidad de destino no disponible') }}</p><small class="text-muted">{{ traspaso.fecha_creacion|date('d/m/Y H:i') }}{% if traspaso.fecha_completado %} · Completado {{ traspaso.fecha_completado|date('d/m/Y H:i') }}{% endif %}</small>{% if traspaso.motivo %}<p class="mb-0 mt-1">{{ traspaso.motivo }}</p>{% endif %}</article>{% else %}<p class="text-muted mb-0">No hay traspasos registrados para este bien.</p>{% endfor %}</div></div>
+<div class="card shadow-sm border-0" id="trazabilidad"><div class="card-header bg-white d-flex justify-content-between align-items-center"><strong>Trazabilidad</strong><a class="small" href="{{ get_base_url() }}historico-movimientos?q={{ bien.clave_interna|url_encode }}">Ver histórico completo</a></div><div class="card-body"><ul class="bi-timeline">{% for movimiento in bien.movimientos %}<li><strong>{{ movimiento.tipo_movimiento }}</strong><span>{{ movimiento.fecha_movimiento|date('d/m/Y H:i') }}</span><p>{{ movimiento.motivo|default(movimiento.observaciones|default('')) }} <a class="small" href="{{ get_base_url() }}historico-movimientos/detalle/{{ movimiento.id_movimiento }}">Ver qué cambió</a></p></li>{% else %}<li>Sin movimientos registrados.</li>{% endfor %}</ul></div></div>
+{% include 'includes/admin/inventory-bottom.twig' %}
