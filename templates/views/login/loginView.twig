@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="{{ get_site_lang() }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} · {{ get_sitename() }}</title>
+  {{ get_css_framework()|raw }}
+  {{ get_fontawesome()|raw }}
+  <link href="{{ get_base_url() }}assets/css/main.css?v={{ get_asset_version() }}" rel="stylesheet">
+  <link href="{{ get_base_url() }}assets/css/system-ui.css?v={{ get_asset_version() }}" rel="stylesheet">
+</head>
+<body class="bi-login-page">
+  <main class="bi-login-card">
+    <header><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i><h1>Bienes Informáticos</h1><p>Control de inventario patrimonial</p></header>
+    <div class="bi-login-body">
+      {{ flash_html|default('')|raw }}
+      <section id="loginPanel" aria-labelledby="loginTitulo" {{ recovery_open ? 'hidden' : '' }}>
+        <h2 class="h5 text-center mb-4" id="loginTitulo">Iniciar sesión</h2>
+        <form method="post" action="{{ get_base_url() }}login/post_login">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <label for="loginUsuario">Usuario</label><input class="form-control" id="loginUsuario" name="usuario" required autocomplete="username">
+          <label class="mt-3" for="loginPassword">Contraseña</label><input class="form-control" id="loginPassword" type="password" name="password" required autocomplete="current-password">
+          <button class="btn bi-btn-primary w-100 mt-4" type="submit">Iniciar sesión</button>
+        </form>
+        <p class="text-center mb-0 mt-3"><a class="small" href="#recuperar-contrasena" data-open-recovery>Recuperar contraseña</a></p>
+      </section>
+
+      <section id="recuperar-contrasena" aria-labelledby="recoveryTitle" data-recovery-step="{{ recovery_step }}" {{ not recovery_open ? 'hidden' : '' }}>
+        <h2 class="h5 text-center mb-3" id="recoveryTitle">Recuperar contraseña</h2>
+        {% if recovery_step == 'request' %}
+          <p class="text-muted text-center mb-4">¿Cómo deseas recibir el código?</p>
+          {% if not recovery_email_available %}
+            <div class="alert alert-warning" role="status">La recuperación por correo electrónico no está configurada todavía. Contacta a administración.</div>
+          {% endif %}
+          <form method="post" action="{{ get_base_url() }}login/recovery_request" id="recoveryRequestForm">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <input type="hidden" name="method" value="email">
+            <label class="form-label" for="recoveryEmail">Correo electrónico</label>
+            <input class="form-control" type="email" id="recoveryEmail" name="email" maxlength="100" autocomplete="email" required>
+            <button class="btn bi-btn-primary w-100 mt-4" type="submit" {{ not recovery_email_available ? 'disabled' : '' }}><i class="fa-solid fa-paper-plane me-2" aria-hidden="true"></i>Enviar código</button>
+          </form>
+        {% elseif recovery_step == 'verify' %}
+          <p class="text-muted text-center mb-4">Ingresa el código de 6 dígitos que recibiste.</p>
+          <form method="post" action="{{ get_base_url() }}login/recovery_verify">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <label class="form-label" for="recoveryCode">Código de verificación</label>
+            <input class="form-control text-center" id="recoveryCode" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required>
+            <button class="btn bi-btn-primary w-100 mt-4" type="submit">Verificar código</button>
+          </form>
+          <p class="small text-muted text-center mt-3 mb-2">El código vence en {{ recovery_ttl_minutes }} minutos y solo se puede usar una vez.</p>
+          <form method="post" action="{{ get_base_url() }}login/recovery_cancel" class="text-center"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit" class="btn btn-link">Solicitar otro código</button></form>
+        {% else %}
+          <p class="text-muted text-center mb-4">Elige una contraseña nueva para tu cuenta.</p>
+          <form method="post" action="{{ get_base_url() }}login/recovery_reset">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <label class="form-label" for="recoveryPassword">Nueva contraseña</label><input class="form-control" id="recoveryPassword" name="password" type="password" minlength="5" maxlength="20" autocomplete="new-password" required>
+            <label class="form-label mt-3" for="recoveryPasswordConfirm">Confirmar contraseña</label><input class="form-control" id="recoveryPasswordConfirm" name="password_confirm" type="password" minlength="5" maxlength="20" autocomplete="new-password" required>
+            <div class="form-text">Entre 5 y 20 caracteres, con minúscula, mayúscula, número y un símbolo de estos: !@#$%^&amp;*_-</div>
+            <button class="btn bi-btn-primary w-100 mt-4" type="submit">Guardar nueva contraseña</button>
+          </form>
+          <form method="post" action="{{ get_base_url() }}login/recovery_cancel" class="text-center mt-2"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit" class="btn btn-link">Cancelar</button></form>
+        {% endif %}
+        {% if recovery_step == 'request' %}<p class="text-center mb-0 mt-3"><a class="small" href="{{ get_base_url() }}login" data-return-login>Volver al inicio de sesión</a></p>{% endif %}
+      </section>
+    </div>
+  </main>
+  <script>
+    (() => {
+      const login = document.getElementById('loginPanel');
+      const recovery = document.getElementById('recuperar-contrasena');
+      const openRecovery = () => { login.hidden = true; recovery.hidden = false; };
+      document.querySelector('[data-open-recovery]')?.addEventListener('click', event => {
+        event.preventDefault();
+        openRecovery();
+        history.replaceState(null, '', '#recuperar-contrasena');
+        recovery.querySelector('input:not([disabled])')?.focus();
+      });
+      if (recovery.dataset.recoveryStep !== 'request' || location.hash === '#recuperar-contrasena') openRecovery();
+      document.querySelector('[data-return-login]')?.addEventListener('click', event => {
+        event.preventDefault();
+        recovery.hidden = true;
+        login.hidden = false;
+        history.replaceState(null, '', location.pathname);
+      });
+    })();
+  </script>
+</body>
+</html>

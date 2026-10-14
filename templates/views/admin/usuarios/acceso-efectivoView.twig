@@ -1,0 +1,36 @@
+{% set moduleIcons = {'Inicio': 'fa-solid fa-house', 'Bienes': 'fa-solid fa-boxes-stacked', 'Catálogos': 'fa-solid fa-list-check', 'Resguardos': 'fa-solid fa-file-signature', 'Movimientos': 'fa-solid fa-arrow-right-arrow-left', 'Documentos': 'fa-solid fa-file-pdf', 'Reportes': 'fa-solid fa-chart-column', 'Administración': 'fa-solid fa-user-shield', 'Permisos sin sección asociada': 'fa-solid fa-ellipsis'} %}
+<section class="bi-effective-result" aria-labelledby="effectiveAccessHeading">
+  <header class="bi-effective-result__heading">
+    <h3 class="h6 mb-1" id="effectiveAccessHeading">Permisos del usuario</h3>
+    <p class="mb-0"><strong>Usuario:</strong> {{ selected_user.nombre|default(selected_user.username) }} · {{ selected_user.username }} <span class="mx-1" aria-hidden="true">|</span> <strong>Rol:</strong> {{ selected_user.rol_nombre|default(selected_user.rol) }}</p>
+  </header>
+  {% if permission_groups %}
+  <div class="bi-effective-result__groups">
+    {% for groupName, section in permission_groups %}
+      {% if section.permission_rows %}
+      <section class="bi-effective-result__group" aria-label="{{ groupName }}">
+        <h4><i class="{{ moduleIcons[groupName]|default('fa-solid fa-layer-group') }} me-2" aria-hidden="true"></i>{{ groupName }}</h4>
+        <ul>
+          {% for permission in section.permission_rows %}
+          {% set permissionAllowed = permission.slug in effective_permissions %}
+          <li class="{{ permissionAllowed ? 'is-allowed' : 'is-denied' }}">
+            {% if permission.slug == 'admin-access' and not permissionAllowed %}
+              <span class="visually-hidden">Acceso de administrador: </span>Sin acceso
+            {% else %}
+              <span class="bi-effective-result__mark" aria-hidden="true">{{ permissionAllowed ? '✓' : '—' }}</span>
+              <span>{{ permission.nombre }}</span>
+              {% if not permissionAllowed %}<span class="visually-hidden">, sin acceso</span>{% endif %}
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+    {% else %}
+      <p class="mb-0">No hay permisos configurados para mostrar.</p>
+    {% endfor %}
+  </div>
+  {% else %}
+    <p class="p-3 mb-0">No hay permisos configurados para mostrar.</p>
+  {% endif %}
+</section>

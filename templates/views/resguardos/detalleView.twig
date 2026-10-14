@@ -1,0 +1,133 @@
+{% set customBreadcrumb = true %}
+{% include 'includes/admin/inventory-top.twig' %}
+<header class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+  <div>
+    <nav class="bi-breadcrumbs" aria-label="Ruta de navegación">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ get_base_url() }}admin">Inicio</a></li>
+        <li class="breadcrumb-item">Documentos y movimientos</li>
+        <li class="breadcrumb-item"><a href="{{ get_base_url() }}resguardos">Resguardos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Detalle</li>
+      </ol>
+    </nav>
+  </div>
+  <div>
+    <a class="btn btn-outline-secondary bi-button-label resguardo-action-btn" href="{{ get_base_url() }}resguardos">
+      <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>
+      <span>Volver a resguardos</span>
+    </a>
+  </div>
+</header>
+
+<section class="card shadow-sm border-0 mb-4 resguardo-summary-card" aria-labelledby="resguardanteHeading">
+  <div class="card-body p-4">
+    <div class="row g-4 align-items-stretch">
+      <div class="col-lg-8">
+        <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+          <h1 class="h4 mb-0 fw-bold text-dark" id="resguardanteHeading">{{ resguardo.nombre_completo|title }}</h1>
+          {% include 'includes/components/status-badge.twig' with { active: resguardo.activo } only %}
+        </div>
+        <div class="text-muted fw-semibold small mb-3">
+          <span>CSP: {{ resguardo.csp }}</span>
+        </div>
+        <div class="pt-2 border-top">
+          <small class="text-muted d-block text-uppercase fw-bold" style="font-size: .75rem; letter-spacing: .04em;">Unidad administrativa</small>
+          <strong class="d-block text-dark mt-1 fs-6">{{ resguardo.unidad_nombre|default('Sin unidad registrada') }}</strong>
+          <span class="d-block text-muted small mt-1">Código: {{ resguardo.unidad_codigo_ua|default('Sin código UA') }}</span>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="resguardo-kpi-card text-center p-3">
+          <div class="d-flex align-items-center justify-content-center gap-3 mb-2">
+            <span class="resguardo-kpi-icon"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i></span>
+            <div class="text-start">
+              <small class="text-muted d-block fw-bold text-uppercase" style="font-size: .75rem; letter-spacing: .04em;">Bienes bajo resguardo</small>
+              <div class="resguardo-kpi-number">{{ resguardo.bienes_asignados }} <span class="fs-6 fw-normal text-muted">{{ resguardo.bienes_asignados == 1 ? 'bien' : 'bienes' }}</span></div>
+            </div>
+          </div>
+          <small class="text-muted d-block mt-auto" style="font-size: .8rem;">{{ resguardo.bienes_asignados > 0 ? 'Custodia vigente' : 'Sin custodia activa' }}</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="card shadow-sm border-0" aria-labelledby="bienesResguardoTitle">
+  <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <h2 class="h6 mb-0 fw-bold text-dark" id="bienesResguardoTitle">
+      <i class="fa-solid fa-boxes-stacked text-danger me-2" aria-hidden="true"></i>Bienes actualmente bajo resguardo
+    </h2>
+    <span class="badge text-bg-light border">{{ resguardo.bienes_asignados }} {{ resguardo.bienes_asignados == 1 ? 'bien asignado' : 'bienes asignados' }}</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0 bi-resguardos-table" aria-label="Bienes asignados al servidor público">
+      <thead>
+        <tr>
+          <th scope="col" style="min-width: 140px;">Clave interna</th>
+          <th scope="col" style="min-width: 180px;">Número de inventario de Control Interno</th>
+          <th scope="col" style="min-width: 180px;">Descripción</th>
+          <th scope="col" style="min-width: 150px;">Marca / Modelo</th>
+          <th scope="col" style="min-width: 130px;">Núm. de serie</th>
+          <th scope="col" style="min-width: 180px;">UA</th>
+          <th scope="col" style="min-width: 180px;">Ubicación</th>
+          <th scope="col" style="min-width: 120px;">Estado</th>
+          <th scope="col" class="text-end" style="min-width: 130px;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in resguardo.asignaciones %}
+        <tr>
+          <td><strong class="font-monospace text-dark">{{ item.clave_interna|default('—') }}</strong></td>
+          <td>{{ item.numero_inventario|default('—') }}</td>
+          <td><strong class="d-block text-dark">{{ item.nombre_bien|default('—')|title }}</strong></td>
+          <td>
+            <strong class="d-block text-dark">{{ item.marca_nombre|default('—')|upper }}</strong>
+            <small class="text-muted">{{ item.modelo_nombre|default('—') }}</small>
+          </td>
+          <td>{{ item.numero_serie|default('—') }}</td>
+          <td>
+            <span class="d-block text-dark fw-semibold">{{ item.unidad_nombre|default('Sin unidad registrada') }}</span>
+            <small class="d-block text-muted">{{ item.codigo_ua|default('Sin código UA') }}</small>
+          </td>
+          <td>
+            <span class="d-block">{{ item.ubicacion_fisica|default(item.municipio|default('Sin ubicación registrada'), true) }}</span>
+            {% if item.localidad %}
+              <small class="d-block text-muted">
+                {{ item.localidad }}{% if item.piso %} · Piso {{ item.piso }}{% endif %}{% if item.seccion_ala %} · {{ item.seccion_ala }}{% endif %}{% if item.cubiculo %} · Cubículo {{ item.cubiculo }}{% endif %}
+              </small>
+            {% endif %}
+          </td>
+          <td>
+            {% include 'includes/components/status-badge.twig' with { active: item.bien_activo } only %}
+            {% if item.estado_uso_nombre %}
+              <small class="d-block text-muted mt-1">{{ item.estado_uso_nombre }}</small>
+            {% endif %}
+          </td>
+          <td class="text-end text-nowrap">
+            <a class="btn btn-sm bi-button-label resguardo-action-btn"
+               href="{{ get_base_url() }}bienes/detalle/{{ item.id_bien }}"
+               aria-label="Ver ficha del bien {{ item.clave_interna|default(item.numero_inventario)|e }}"
+               title="Ver bien"
+               data-bs-toggle="tooltip"
+               data-bs-placement="top">
+              <i class="fa-solid fa-eye me-1" aria-hidden="true"></i>
+              <span>Ver bien</span>
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9" class="text-center py-5">
+            <div class="bi-empty-state">
+              <i class="fa-solid fa-boxes-stacked fs-2 text-muted mb-2" aria-hidden="true"></i>
+              <h3 class="h6 mb-1 text-dark">Sin bienes actualmente asignados</h3>
+              <p class="text-muted small mb-0">Este servidor público no tiene bienes bajo su custodia activa en este momento.</p>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% include 'includes/admin/inventory-bottom.twig' %}

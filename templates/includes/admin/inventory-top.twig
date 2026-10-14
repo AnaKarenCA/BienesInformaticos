@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+<head>
+  {% set visibleTitle = controller == 'bienes' and title == 'Inventario de bienes' ? 'Inventario' : title %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ visibleTitle }} · {{ get_sitename() }}</title>
+  <link href="{{ get_base_url() }}assets/css/admin/sb-admin-2.min.css" rel="stylesheet">
+  {{ get_css_framework()|raw }}
+  <link href="{{ get_base_url() }}assets/css/main.css?v={{ get_asset_version() }}" rel="stylesheet">
+  <link href="{{ get_base_url() }}assets/css/inventory-overrides.css?v={{ get_asset_version() }}" rel="stylesheet">
+  <link href="{{ get_base_url() }}assets/css/system-ui.css?v={{ get_asset_version() }}" rel="stylesheet">
+  <link href="{{ get_base_url() }}assets/css/transfers-ui.css?v={{ get_asset_version() }}" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bi-body">
+  <a class="bi-skip-link" href="#mainContent">Saltar al contenido principal</a>
+  <div id="wrapper" class="d-flex">
+    <nav class="navbar-nav bi-sidebar sidebar sidebar-dark accordion" id="accordionSidebar" aria-label="Navegación principal">
+      <a class="sidebar-brand d-flex align-items-center" href="{{ get_base_url() }}admin" aria-label="Ir al inicio: Bienes Informáticos" title="Bienes Informáticos">
+        <span class="bi-brand-mark" aria-hidden="true"><i class="fa-solid fa-boxes-stacked"></i></span><span class="bi-brand-name">Bienes Informáticos</span>
+      </a>
+      <div id="biNavPrincipal">
+        <div class="sidebar-heading">Principal</div>
+        <div class="nav-item"><a class="nav-link {{ controller == 'admin' and method == 'index' ? 'active' : '' }}" href="{{ get_base_url() }}admin" aria-label="Inicio" title="Inicio" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Inicio" {% if controller == 'admin' and method == 'index' %}aria-current="page"{% endif %}><i class="fa-solid fa-house" aria-hidden="true"></i><span>Inicio</span></a></div>
+        <div class="nav-item"><a class="nav-link {{ controller == 'identificar' ? 'active' : '' }}" href="{{ get_base_url() }}identificar" aria-label="Identificar bien" title="Identificar bien" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Identificar bien" {% if controller == 'identificar' %}aria-current="page"{% endif %}><i class="fa-solid fa-qrcode" aria-hidden="true"></i><span>Identificar bien</span></a></div>
+        <div class="nav-item"><a class="nav-link {{ controller == 'bienes' ? 'active' : '' }}" href="{{ get_base_url() }}bienes" aria-label="Inventario" title="Inventario" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Inventario" {% if controller == 'bienes' %}aria-current="page"{% endif %}><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i><span>Inventario</span></a></div>
+        <hr class="sidebar-divider">
+        {% set transferRoute = controller == 'traspasos' %}
+        {% set documentsRoute = controller == 'documentos' %}
+        {% set documentsAndMovementsRoute = controller == 'resguardos' or controller == 'historico_movimientos' or transferRoute or documentsRoute %}
+        {% if can_view_resguardos|default(false) or can_view_transfers|default(false) or can_access_documents|default(false) or can_view_movements|default(false) %}
+        <button class="bi-nav-section" type="button" data-bs-toggle="collapse" data-bs-target="#biNavDocumentos" aria-controls="biNavDocumentos" aria-expanded="{{ documentsAndMovementsRoute ? 'true' : 'false' }}" aria-label="Documentos y movimientos" title="Documentos y movimientos"><i class="fa-solid fa-folder-open bi-section-icon" aria-hidden="true"></i><span class="bi-nav-label">Documentos y movimientos</span><i class="fa-solid fa-chevron-down bi-chevron" aria-hidden="true"></i></button>
+        <div class="collapse {{ documentsAndMovementsRoute ? 'show' : '' }}" id="biNavDocumentos">
+          {% if can_view_resguardos|default(false) %}<div class="nav-item"><a class="nav-link {{ controller == 'resguardos' ? 'active' : '' }}" href="{{ get_base_url() }}resguardos" aria-label="Resguardos" title="Resguardos" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Resguardos" {% if controller == 'resguardos' %}aria-current="page"{% endif %}><i class="fa-solid fa-clipboard-user" aria-hidden="true"></i><span>Resguardos</span></a></div>{% endif %}
+          {% if can_view_transfers|default(false) %}<div class="nav-item"><a class="nav-link {{ transferRoute ? 'active' : '' }}" href="{{ get_base_url() }}traspasos" aria-label="Traspasos" title="Traspasos" {% if transferRoute %}aria-current="page"{% endif %}><i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i><span>Traspasos</span></a></div>{% endif %}
+          {% if can_access_documents|default(false) %}<div class="nav-item"><a class="nav-link {{ documentsRoute ? 'active' : '' }}" href="{{ get_base_url() }}documentos" aria-label="Documentos" title="Documentos" {% if documentsRoute %}aria-current="page"{% endif %}><i class="fa-solid fa-folder" aria-hidden="true"></i><span>Documentos</span></a></div>{% endif %}
+          {% if can_view_movements|default(false) %}<div class="nav-item"><a class="nav-link {{ controller == 'historico_movimientos' ? 'active' : '' }}" href="{{ get_base_url() }}historico-movimientos" aria-label="Histórico de movimientos" title="Histórico de movimientos" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Histórico de movimientos" {% if controller == 'historico_movimientos' %}aria-current="page"{% endif %}><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i><span>Histórico de movimientos</span></a></div>{% endif %}
+        </div>
+        {% endif %}
+        {% if can_view_catalogs|default(false) %}
+        <button class="bi-nav-section" type="button" data-bs-toggle="collapse" data-bs-target="#biNavCatalogos" aria-controls="biNavCatalogos" aria-expanded="{{ controller == 'catalogos' ? 'true' : 'false' }}" aria-label="Catálogos" title="Catálogos"><i class="fa-solid fa-list bi-section-icon" aria-hidden="true"></i><span class="bi-nav-label">Catálogos</span><i class="fa-solid fa-chevron-down bi-chevron" aria-hidden="true"></i></button>
+        <div class="collapse {{ controller == 'catalogos' ? 'show' : '' }}" id="biNavCatalogos">
+          <div class="sidebar-heading">Características del bien</div>
+          <div class="nav-item"><a class="nav-link {{ method == 'marcas_modelos' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/marcas_modelos" aria-label="Marcas y modelos" title="Marcas y modelos" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Marcas y modelos" {% if method == 'marcas_modelos' %}aria-current="page"{% endif %}><i class="fa-solid fa-tags" aria-hidden="true"></i><span>Marcas y modelos</span></a></div>
+          <div class="nav-item"><a class="nav-link {{ method == 'clasificacion' or method == 'index' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/clasificacion" aria-label="Clasificación" title="Clasificación" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Clasificación" {% if method == 'clasificacion' or method == 'index' %}aria-current="page"{% endif %}><i class="fa-solid fa-sitemap" aria-hidden="true"></i><span>Clasificación</span></a></div>
+          <div class="nav-item"><a class="nav-link {{ method == 'colores' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/colores" aria-label="Colores" title="Colores" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Colores" {% if method == 'colores' %}aria-current="page"{% endif %}><i class="fa-solid fa-palette" aria-hidden="true"></i><span>Colores</span></a></div>
+          <div class="nav-item"><a class="nav-link {{ method == 'materiales' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/materiales" aria-label="Materiales" title="Materiales" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Materiales" {% if method == 'materiales' %}aria-current="page"{% endif %}><i class="fa-solid fa-cubes-stacked" aria-hidden="true"></i><span>Materiales</span></a></div>
+          <div class="nav-item"><a class="nav-link {{ method == 'estados_uso' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/estados_uso" aria-label="Estados de uso" title="Estados de uso" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Estados de uso" {% if method == 'estados_uso' %}aria-current="page"{% endif %}><i class="fa-solid fa-heart-pulse" aria-hidden="true"></i><span>Estados de uso</span></a></div>
+          <div class="sidebar-heading">Ubicación y administración</div>
+          <div class="nav-item"><a class="nav-link {{ method == 'ubicaciones' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/ubicaciones" aria-label="Ubicaciones" title="Ubicaciones" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Ubicaciones" {% if method == 'ubicaciones' %}aria-current="page"{% endif %}><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Ubicaciones</span></a></div>
+          <div class="nav-item"><a class="nav-link {{ method == 'unidades_admin' or method == 'unidades' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/unidades" aria-label="Unidades administrativas" title="Unidades administrativas" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Unidades administrativas" {% if method == 'unidades_admin' or method == 'unidades' %}aria-current="page"{% endif %}><i class="fa-solid fa-building" aria-hidden="true"></i><span>Unidades administrativas</span></a></div>
+          <div class="nav-item"><a class="nav-link {{ method == 'resguardantes' or method == 'cambiar_resguardante' ? 'active' : '' }}" href="{{ get_base_url() }}catalogos/resguardantes" aria-label="Resguardantes" title="Resguardantes" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Resguardantes" {% if method == 'resguardantes' %}aria-current="page"{% endif %}><i class="fa-solid fa-id-card-clip" aria-hidden="true"></i><span>Resguardantes</span></a></div>
+        </div>
+        {% endif %}
+        {% set administrationRoute = controller == 'admin' %}
+        {% set administrationMethod = method|replace({'-': '_'}) %}
+        {% if can_admin_users|default(false) %}
+        <button class="bi-nav-section" type="button" data-bs-toggle="collapse" data-bs-target="#biNavAdministracion" aria-controls="biNavAdministracion" aria-expanded="{{ administrationRoute ? 'true' : 'false' }}" aria-label="Administración" title="Administración"><i class="fa-solid fa-user-gear bi-section-icon" aria-hidden="true"></i><span class="bi-nav-label">Administración</span><i class="fa-solid fa-chevron-down bi-chevron" aria-hidden="true"></i></button>
+        <div class="collapse {{ administrationRoute ? 'show' : '' }}" id="biNavAdministracion">
+          <div class="nav-item"><a class="nav-link {{ administrationRoute and administrationMethod == 'usuarios' ? 'active' : '' }}" href="{{ get_base_url() }}admin/usuarios" aria-label="Todos los usuarios" title="Todos los usuarios" {% if administrationRoute and administrationMethod == 'usuarios' %}aria-current="page"{% endif %}><i class="fa-solid fa-users" aria-hidden="true"></i><span>Todos los usuarios</span></a></div>
+          <div class="nav-item"><a class="nav-link {{ administrationRoute and administrationMethod == 'matriz_permisos' ? 'active' : '' }}" href="{{ get_base_url() }}admin/matriz-permisos" aria-label="Matriz de permisos" title="Matriz de permisos" {% if administrationRoute and administrationMethod == 'matriz_permisos' %}aria-current="page"{% endif %}><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Roles y permisos</span></a></div>
+        </div>
+        {% endif %}
+      </div>
+    </nav>
+    <div class="bi-sidebar-backdrop" data-bi-sidebar-backdrop aria-hidden="true"></div>
+    <div id="content-wrapper" class="d-flex flex-column"><div id="content">
+      <nav class="navbar navbar-expand bi-topbar" aria-label="Barra superior">
+        <button class="btn bi-topbar-toggle me-3" type="button" id="biNavToggle" aria-label="Mostrar u ocultar menú" aria-controls="accordionSidebar" aria-expanded="true" title="Mostrar u ocultar menú"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
+        <span class="bi-current-page">{{ visibleTitle|default('Bienes Informáticos') }}</span>
+        <div class="dropdown ms-auto bi-user-menu">
+          <button class="btn bi-user-menu__toggle bi-button-label dropdown-toggle" type="button" id="biUserMenuToggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Abrir menú de usuario">
+            <i class="fa-solid fa-user" aria-hidden="true"></i><span class="bi-user-menu__name">{{ current_user.username|default(current_user.nombre|default('')) }}</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="biUserMenuToggle">
+            <li><a class="dropdown-item" href="{{ get_base_url() }}admin/perfil"><i class="fa-regular fa-user me-2" aria-hidden="true"></i>Mi perfil</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ get_base_url() }}logout"><i class="fa-solid fa-arrow-right-from-bracket me-2" aria-hidden="true"></i>Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </nav>
+      <main class="container-fluid pb-5" id="mainContent" tabindex="-1">
+        {% if controller != 'admin' and not (controller == 'bienes' and (method == 'registrar' or method == 'editar')) and not (customBreadcrumb|default(false)) %}<nav class="bi-breadcrumbs" aria-label="Ruta de navegación"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{{ get_base_url() }}admin">Inicio</a></li>{% if documentsAndMovementsRoute|default(false) %}<li class="breadcrumb-item">Documentos y movimientos</li>{% endif %}<li class="breadcrumb-item active" aria-current="page">{{ visibleTitle|default('Sección') }}</li></ol></nav>{% endif %}
+        {{ flash_html|raw }}

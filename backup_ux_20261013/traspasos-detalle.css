@@ -1,0 +1,285 @@
+.transfer-detail {
+  --transfer-action: #111;
+  --transfer-brand: #CB2027;
+  --transfer-brand-soft: #fff1f2;
+}
+
+.transfer-detail .transfer-document-card,
+.transfer-detail .transfer-generate-form {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid #d4d4d4;
+  border-radius: .5rem;
+  background: #fff;
+}
+
+.transfer-detail .transfer-status--compact {
+  display: inline-flex;
+  align-items: center;
+  padding: .2rem .55rem;
+  border: 1px solid #777;
+  border-radius: 999px;
+  color: #202020;
+  background: #fff;
+  font-size: .78rem;
+  font-weight: 700;
+  vertical-align: middle;
+  cursor: help;
+}
+.transfer-detail .transfer-status--compact::before { display: none; }
+.transfer-detail .transfer-document-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem 1.25rem; }
+.transfer-detail .transfer-document-row > .transfer-file-heading { flex: 1 1 20rem; }
+.transfer-detail .transfer-document-row > .transfer-actions { flex: 0 1 auto; margin: 0; }
+
+.transfer-detail .transfer-generate-form {
+  margin-top: 1rem;
+  background: #fafafa;
+}
+
+.transfer-detail .transfer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.transfer-detail .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .2rem;
+  min-height: 2.45rem;
+  padding: .45rem .8rem;
+  color: var(--transfer-action) !important;
+  border: 1.5px solid var(--transfer-action) !important;
+  border-radius: .4rem;
+  background: #fff !important;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+  white-space: normal;
+  transition: color .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.transfer-detail .btn:hover,
+.transfer-detail .btn:focus-visible {
+  color: var(--transfer-brand) !important;
+  border-color: var(--transfer-brand) !important;
+  background: var(--transfer-brand-soft) !important;
+}
+
+.transfer-detail .btn:focus-visible {
+  outline: 3px solid rgba(203, 32, 39, .3);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 .15rem #fff;
+}
+
+.transfer-detail .btn:disabled,
+.transfer-detail .btn.disabled {
+  color: #3d3d3d !important;
+  border-color: #777 !important;
+  background: #eee !important;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.transfer-detail .transfer-validation-status {
+  padding: .8rem 1rem;
+  border: 1px solid #d4d4d4;
+  border-radius: .4rem;
+  background: #fafafa;
+}
+
+.transfer-detail .transfer-file-heading { display: flex; align-items: flex-start; gap: .8rem; min-width: 0; }
+.transfer-detail .transfer-file-heading > div { min-width: 0; overflow-wrap: anywhere; }
+.transfer-detail .transfer-pdf-icon { display: inline-grid; place-items: center; flex: 0 0 2.5rem; width: 2.5rem; height: 2.5rem; border: 1px solid #b4232a; border-radius: .4rem; color: #b4232a; background: #fff5f5; font-size: 1.25rem; }
+.transfer-detail .transfer-readonly-value { display: block; white-space: pre-wrap; overflow-wrap: anywhere; }
+.transfer-detail .transfer-data-editor { padding: 1rem; border: 1px solid #c7c7c7; border-radius: .5rem; background: #fafafa; }
+.transfer-detail .transfer-file-input { width: auto; max-width: min(100%, 20rem); min-width: 12rem; }
+.transfer-detail .transfer-info-grid > div { min-height: 4.4rem; padding: .5rem .75rem; border-left: 2px solid #e2e2e2; overflow-wrap: anywhere; }
+.transfer-detail #autorizacion-externa,
+.transfer-detail #documentos-expediente,
+.transfer-detail [id^="documento-"] { scroll-margin-top: 1.25rem; }
+.transfer-detail .transfer-evidence { margin-top: 1rem; padding: 1rem; border-top: 1px solid #d4d4d4; background: #fafafa; }
+.transfer-detail .transfer-evidence summary { cursor: pointer; font-weight: 600; }
+.transfer-action-notice { position: fixed; z-index: 1080; top: 1rem; right: 1rem; width: min(34rem, calc(100vw - 2rem)); box-shadow: 0 .35rem 1.25rem rgba(0, 0, 0, .2); }
+.transfer-detail .transfer-timeline { position: relative; padding-left: 1.3rem; }
+.transfer-detail .transfer-timeline::before { position: absolute; top: .6rem; bottom: .6rem; left: .32rem; width: 2px; background: #d7d7d7; content: ''; }
+.transfer-detail .transfer-timeline__event { position: relative; padding: 0 0 1.25rem .5rem; overflow-wrap: anywhere; }
+.transfer-detail .transfer-timeline__event[hidden] { display: none; }
+.transfer-detail .transfer-timeline__marker { position: absolute; top: .3rem; left: -1.3rem; width: .7rem; height: .7rem; border: 2px solid #fff; border-radius: 50%; background: #CB2027; box-shadow: 0 0 0 1px #CB2027; }
+
+.transfer-detail th,
+.transfer-detail td {
+  vertical-align: middle;
+}
+
+@media (max-width: 575.98px) {
+  .transfer-detail .transfer-actions .btn {
+    flex: 1 1 8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .transfer-detail .btn {
+    transition: none;
+  }
+}
+
+/* Compact detail layout overrides the legacy roomy spacing above. */
+.transfer-detail .transfer-info-grid > div { min-height: 3.5rem; padding-top: .35rem; padding-bottom: .35rem; }
+.transfer-detail .transfer-evidence { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem .75rem; margin-top: .75rem; padding: .65rem .75rem; }
+.transfer-detail .transfer-evidence > strong { margin: 0 !important; }
+.transfer-detail .transfer-evidence-upload { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .4rem .65rem; }
+.transfer-detail .transfer-evidence-upload input[type="file"] { max-width: min(100%, 23rem); }
+.transfer-detail .transfer-evidence-upload input[type="file"][hidden] { display: none; }
+
+/* Expediente documental: tarjetas compactas, con el archivo generado y la evidencia separados. */
+.transfer-detail #documentos-expediente .card-body { background: #f1f5f9; }
+.transfer-detail .transfer-document-card--v2 {
+  padding: 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .03);
+  color: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.transfer-detail .transfer-document-card--v2 + .transfer-document-card--v2 { margin-top: 1rem; }
+.transfer-detail .transfer-document-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; padding-bottom: .85rem; border-bottom: 1px solid #e2e8f0; }
+.transfer-detail .transfer-document-card__title { margin: 0; color: #0f172a; font-size: 1rem; font-weight: 700; line-height: 1.25; }
+.transfer-detail .transfer-document-card__meta { margin: .25rem 0 0; color: #64748b; font-size: .8125rem; overflow-wrap: anywhere; }
+.transfer-detail .transfer-document-file { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 0; }
+.transfer-detail .transfer-document-file .transfer-file-heading { flex: 1 1 18rem; }
+.transfer-detail .transfer-file-heading__label, .transfer-detail .transfer-file-heading__name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.transfer-detail .transfer-file-heading__label { color: #0f172a; font-size: .8125rem; }
+.transfer-detail .transfer-file-heading__name { color: #64748b; font-size: .8125rem; }
+.transfer-detail .transfer-document-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; width: min(100%, 31rem); }
+.transfer-detail .transfer-document-actions form { display: contents; margin: 0; }
+.transfer-detail .transfer-document-card--v2 .btn { min-height: 2.25rem; padding: .45rem .65rem; color: #2563eb !important; border-color: #bfdbfe !important; border-width: 1px !important; border-radius: .5rem; background: #eff6ff !important; font-size: .8125rem; font-weight: 600; }
+.transfer-detail .transfer-document-card--v2 .btn:hover, .transfer-detail .transfer-document-card--v2 .btn:focus-visible { color: #1d4ed8 !important; border-color: #93c5fd !important; background: #dbeafe !important; }
+.transfer-detail .transfer-evidence-pill { display: inline-flex; align-items: center; gap: .3rem; flex: 0 0 auto; width: fit-content; padding: .25rem .55rem; border: 1px solid transparent; border-radius: 999px; font-size: .75rem; font-weight: 700; line-height: 1.2; white-space: nowrap; }
+.transfer-detail .transfer-evidence-pill--validado { color: #15803d; border-color: #a7f3d0; background: #dcfce7; }
+.transfer-detail .transfer-evidence-pill--pendiente { color: #b45309; border-color: #fde68a; background: #fef3c7; }
+.transfer-detail .transfer-evidence-pill--rechazado { color: #b91c1c; border-color: #fecaca; background: #fee2e2; }
+.transfer-detail .transfer-evidence-pill--sin_evidencia { color: #64748b; border-color: #e2e8f0; background: #f8fafc; }
+.transfer-detail .transfer-card-editor, .transfer-detail .transfer-ccp-editor { margin-top: .25rem; }
+.transfer-detail .transfer-card-editor > summary, .transfer-detail .transfer-ccp-editor summary, .transfer-detail .transfer-reject-control > summary { list-style: none; width: fit-content; cursor: pointer; }
+.transfer-detail .transfer-card-editor > summary::-webkit-details-marker, .transfer-detail .transfer-ccp-editor summary::-webkit-details-marker, .transfer-detail .transfer-reject-control > summary::-webkit-details-marker { display: none; }
+.transfer-detail .transfer-card-editor[open], .transfer-detail .transfer-ccp-editor details[open] { padding: .85rem; border: 1px solid #e2e8f0; border-radius: .65rem; background: #f8fafc; }
+.transfer-detail .transfer-evidence { display: block; margin-top: 1rem; padding: 1rem; border: 1px solid #e2e8f0; border-radius: .75rem; background: #f8fafc; }
+.transfer-detail .transfer-evidence__header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+.transfer-detail .transfer-evidence__header h4 { margin: 0; color: #0f172a; font-size: .8125rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.transfer-detail .transfer-evidence__header p { max-width: 42rem; margin: .25rem 0 0; color: #0f172a; font-size: .875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.transfer-detail .transfer-evidence__meta, .transfer-detail .transfer-evidence__review { margin: .45rem 0 0; color: #64748b; font-size: .8125rem; overflow-wrap: anywhere; }
+.transfer-detail .transfer-evidence__review--valid { color: #15803d; }
+.transfer-detail .transfer-evidence__review--rejected { color: #b91c1c; }
+.transfer-detail .transfer-file-unavailable { display: block; margin: .45rem 0 0; color: #b91c1c; font-size: .8125rem; font-weight: 600; overflow-wrap: anywhere; }
+.transfer-detail .transfer-evidence .transfer-document-actions { margin-top: .75rem; }
+.transfer-detail .transfer-evidence-upload { display: inline-flex; align-items: center; gap: .5rem; margin-top: .75rem; }
+.transfer-detail .transfer-reject-control { margin-top: .75rem; }
+.transfer-detail .transfer-reject-control form { max-width: 31rem; }
+.transfer-detail .transfer-evidence-history { margin-top: .85rem; border-top: 1px solid #e2e8f0; padding-top: .75rem; }
+.transfer-detail .transfer-evidence-history > summary { cursor: pointer; color: #2563eb; font-size: .8125rem; font-weight: 700; }
+.transfer-detail .transfer-evidence-history__item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .5rem .75rem; align-items: center; margin-top: .65rem; padding-top: .65rem; border-top: 1px solid #e2e8f0; }
+.transfer-detail .transfer-evidence-history__item strong, .transfer-detail .transfer-evidence-history__item small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.transfer-detail .transfer-evidence-history__item small { color: #64748b; font-size: .75rem; }
+.transfer-detail .transfer-evidence-history__actions { grid-column: 1 / -1; display: flex; gap: .75rem; font-size: .8125rem; }
+.transfer-detail .transfer-evidence-history__actions a { color: #2563eb; }
+
+@media (max-width: 767.98px) {
+  .transfer-detail .transfer-document-file { align-items: stretch; flex-direction: column; }
+  .transfer-detail .transfer-document-actions { width: 100%; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); }
+}
+
+@media (max-width: 575.98px) {
+  .transfer-detail .transfer-document-card--v2 { padding: 1rem; }
+  .transfer-detail .transfer-document-card__header, .transfer-detail .transfer-evidence__header { flex-direction: column; }
+  .transfer-detail .transfer-evidence-history__item { grid-template-columns: 1fr; }
+}
+
+/* Disponibilidad documental y regularización: paleta institucional, separada del estado patrimonial. */
+.transfer-page {
+  --document-wine: #800000;
+  --document-wine-dark: #5E0006;
+  --document-wine-light: #B83A5A;
+  --document-gold: #AE873D;
+  --document-paper: #F6F3EA;
+  --document-card: #ECE6D8;
+  --document-hover: #DFD7C3;
+  --document-border: #C8BB9E;
+  --document-text: #2B261F;
+  --document-warm-white: #FAF8F2;
+}
+.transfer-page .transfer-document-summary,
+.transfer-page .transfer-document-status {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  width: fit-content;
+  margin-top: .35rem;
+  padding: .24rem .55rem;
+  border: 1px solid var(--document-border);
+  border-radius: 999px;
+  color: var(--document-text);
+  background: var(--document-warm-white);
+  font-size: .76rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.transfer-page .transfer-document-summary--available,
+.transfer-page .transfer-document-status--available { border-color: #6f8c57; background: #edf3e8; color: #314c22; }
+.transfer-page .transfer-document-summary--attention,
+.transfer-page .transfer-document-status--missing,
+.transfer-page .transfer-document-status--pending { border-color: var(--document-gold); background: #f8efd9; color: #624709; }
+.transfer-page .transfer-document-status--invalid,
+.transfer-page .transfer-document-status--inconsistent { border-color: var(--document-wine-light); background: #f9e5e9; color: var(--document-wine-dark); }
+.transfer-page .transfer-document-status--unverified,
+.transfer-page .transfer-document-status--unavailable { border-color: #8b8172; background: #eeeae1; color: #514a40; }
+.transfer-page .transfer-document-status--reviewed { border-color: #6f8c57; background: #edf3e8; color: #314c22; }
+.transfer-page .transfer-document-incident {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--document-gold);
+  border-left: .4rem solid var(--document-wine);
+  border-radius: .65rem;
+  color: var(--document-text);
+  background: var(--document-paper);
+}
+.transfer-page .transfer-document-incident > header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+.transfer-page .transfer-document-incident h2 { color: var(--document-wine-dark); }
+.transfer-page .transfer-document-incident__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .65rem; margin: 1rem 0; }
+.transfer-page .transfer-document-incident__grid > div { min-width: 0; padding: .6rem .7rem; border: 1px solid var(--document-border); border-radius: .45rem; background: var(--document-warm-white); }
+.transfer-page .transfer-document-incident dt { color: var(--document-wine-dark); font-size: .75rem; font-weight: 700; }
+.transfer-page .transfer-document-incident dd { margin: .2rem 0 0; overflow-wrap: anywhere; font-size: .9rem; }
+.transfer-page .transfer-document-incident__note { margin: .75rem 0 0; color: #514a40; font-size: .84rem; }
+.transfer-page .transfer-constancy-draft { margin-top: .75rem; padding: .7rem .8rem; border: 1px solid var(--document-border); border-radius: .45rem; background: var(--document-warm-white); }
+.transfer-page .transfer-constancy-draft summary { color: var(--document-wine-dark); cursor: pointer; font-weight: 700; }
+.transfer-page .transfer-constancy-draft p { margin: .6rem 0 0; font-size: .875rem; }
+.transfer-page .transfer-constancy-form { margin-top: .75rem; padding: .85rem; border: 1px solid var(--document-border); border-radius: .5rem; background: var(--document-card); }
+.transfer-page .transfer-constancy-documents { display: flex; flex-wrap: wrap; gap: .45rem .8rem; }
+.transfer-page .transfer-constancy-documents label { font-size: .84rem; }
+.transfer-page .transfer-document-card--v2 { border-color: var(--document-border); background: var(--document-warm-white); box-shadow: 0 3px 10px rgba(94,0,6,.06); color: var(--document-text); }
+.transfer-page .transfer-document-card__header { border-bottom-color: var(--document-border); }
+.transfer-page .transfer-document-card__header { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+.transfer-page .transfer-document-card__context { display: flex; flex-wrap: wrap; gap: .35rem .55rem; margin-bottom: .5rem; color: #514a40; font-size: .72rem; font-weight: 700; line-height: 1.25; }
+.transfer-page .transfer-document-card__context span { padding-right: .55rem; border-right: 1px solid var(--document-border); }
+.transfer-page .transfer-document-card__context span:last-child { padding-right: 0; border-right: 0; }
+.transfer-page .transfer-document-card__states { display: flex; flex-direction: column; align-items: flex-end; gap: .4rem; }
+.transfer-page .transfer-document-card__states .transfer-document-status,
+.transfer-page .transfer-document-card__states .transfer-evidence-pill { margin-top: 0; }
+.transfer-page .transfer-document-file { align-items: flex-start; }
+.transfer-page .transfer-document-actions { width: min(100%, 22rem); grid-template-columns: repeat(auto-fit, minmax(9.25rem, 1fr)); }
+.transfer-page .transfer-file-unavailable { padding: .6rem .7rem; border: 1px solid var(--document-gold); border-left: .25rem solid var(--document-wine); border-radius: .35rem; background: var(--document-paper); color: #624709; font-weight: 500; }
+.transfer-page .transfer-document-card__title,
+.transfer-page .transfer-file-heading__label,
+.transfer-page .transfer-evidence__header h4 { color: var(--document-wine-dark); }
+.transfer-page .transfer-pdf-icon { border-color: var(--document-wine); color: var(--document-wine); background: #f9e5e9; }
+.transfer-page .transfer-document-card--v2 .btn,
+.transfer-page .transfer-constancy-form .btn { color: var(--document-wine-dark) !important; border-color: var(--document-wine) !important; background: var(--document-warm-white) !important; }
+.transfer-page .transfer-document-card--v2 .btn:hover,
+.transfer-page .transfer-document-card--v2 .btn:focus-visible,
+.transfer-page .transfer-constancy-form .btn:hover,
+.transfer-page .transfer-constancy-form .btn:focus-visible { color: var(--document-wine-dark) !important; border-color: var(--document-wine-dark) !important; background: var(--document-hover) !important; }
+@media (max-width: 991.98px) { .transfer-page .transfer-document-incident__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 767.98px) { .transfer-page .transfer-document-card__header { grid-template-columns: 1fr; } .transfer-page .transfer-document-card__states { align-items: flex-start; flex-direction: row; flex-wrap: wrap; } .transfer-page .transfer-document-actions { width: 100%; } }
+@media (max-width: 575.98px) { .transfer-page .transfer-document-incident > header { flex-direction: column; } .transfer-page .transfer-document-incident__grid { grid-template-columns: 1fr; } .transfer-page .transfer-document-card__context span { padding-right: 0; border-right: 0; } }

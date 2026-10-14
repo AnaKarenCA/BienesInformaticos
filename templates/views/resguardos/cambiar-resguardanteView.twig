@@ -1,0 +1,31 @@
+{% include 'includes/admin/inventory-top.twig' %}
+<header class="mb-4">
+  <nav class="bi-breadcrumbs" aria-label="Ruta de navegación"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{{ get_base_url() }}bienes">Bienes</a></li><li class="breadcrumb-item"><a href="{{ get_base_url() }}bienes/detalle/{{ bien.id_bien }}">{{ bien.clave_interna|default('Bien') }}</a></li><li class="breadcrumb-item active" aria-current="page">Cambiar resguardante</li></ol></nav>
+  <h1 class="h3 bi-title mb-1">Cambiar resguardante</h1>
+  <p class="text-muted mb-0">La custodia anterior se conservará en el historial y el cambio quedará registrado como movimiento.</p>
+</header>
+
+<section class="card shadow-sm border-0 mb-4" aria-labelledby="custodiaBienTitulo">
+  <div class="card-header bg-white"><strong id="custodiaBienTitulo">Bien y custodia actual</strong></div>
+  <div class="card-body row g-3">
+    <div class="col-md-4"><small class="text-muted d-block">Bien</small><strong>{{ bien.nombre_bien|title }}</strong></div>
+    <div class="col-md-4"><small class="text-muted d-block">Clave interna / inventario</small><strong>{{ bien.clave_interna|default('—') }} · {{ bien.numero_inventario|default('—') }}</strong></div>
+    <div class="col-md-4"><small class="text-muted d-block">Resguardante actual</small><strong>{{ bien.resguardante_nombre|default('Sin asignar')|title }}</strong>{% if bien.resguardante_csp %}<span class="d-block text-muted">CSP {{ bien.resguardante_csp }}</span>{% endif %}</div>
+  </div>
+</section>
+
+<form method="post" action="{{ get_base_url() }}resguardos/cambiar-resguardante/{{ bien.id_bien }}">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <section class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white"><strong>Nueva custodia</strong></div>
+    <div class="card-body row g-3">
+      <div class="col-md-8"><label class="form-label" for="resguardanteNuevo">Resguardante</label><select class="form-select" id="resguardanteNuevo" name="resguardante_nuevo" required><option value="">Seleccionar...</option>{% for item in resguardantes %}<option value="{{ item.id_resguardante }}" {% if bien.id_resguardante|default(0) == item.id_resguardante %}selected{% endif %}>{{ item.csp }} · {{ item.nombre_completo|title }}</option>{% endfor %}</select></div>
+      <div class="col-md-4"><label class="form-label" for="fechaAsignacion">Fecha de asignación</label><input class="form-control" type="date" id="fechaAsignacion" name="fecha_asignacion" value="{{ 'now'|date('Y-m-d') }}" required></div>
+      <div class="col-md-6"><label class="form-label" for="motivoCustodia">Motivo</label><input class="form-control" id="motivoCustodia" name="motivo" maxlength="250"></div>
+      <div class="col-md-6"><label class="form-label" for="observacionesCustodia">Observaciones</label><textarea class="form-control" id="observacionesCustodia" name="observaciones" rows="2" maxlength="500"></textarea></div>
+    </div>
+  </section>
+  <div class="d-flex justify-content-end gap-2"><a class="btn btn-outline-secondary" href="{{ get_base_url() }}bienes/detalle/{{ bien.id_bien }}">Cancelar</a><button class="btn bi-btn-primary" type="submit" {% if not resguardantes %}disabled{% endif %}>Guardar cambio de custodia</button></div>
+  {% if not resguardantes %}<p class="alert alert-warning mt-3 mb-0" role="status">No hay resguardantes activos disponibles.</p>{% endif %}
+</form>
+{% include 'includes/admin/inventory-bottom.twig' %}

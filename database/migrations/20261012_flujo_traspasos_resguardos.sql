@@ -1,0 +1,6 @@
+-- No requiere ALTER TABLE.
+-- La trazabilidad canónica ya existe sin duplicar claves:
+-- baja_resguardo.id_resguardo -> traspaso_bien.id_resguardo_origen
+-- -> traspaso_bien.id_traspaso / traspaso_bien.id_movimiento.
+-- Este archivo se conserva como constancia de diseño; no modifica datos,
+-- permisos ni el esquema instalado.
